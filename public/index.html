@@ -394,10 +394,30 @@ video#camVideo{position:absolute;inset:0;width:100%;height:100%;object-fit:cover
       <div class="event-row" onclick="showToast('Migración de Monarcas activa')"><div class="event-icon">🦋</div><div><div class="event-title">Migración de Monarcas</div><div class="event-desc">La Monarca pasa por la costa atlántica. Rareza aumentada.</div><div class="event-time">3 días · +2× XP</div></div></div>
     </div>
     <div class="screen" id="screen-dex">
-      <div class="search-bar"><svg width="13" height="13" viewBox="0 0 24 24" fill="none" stroke="var(--text3)" stroke-width="2"><circle cx="11" cy="11" r="8"/><line x1="21" y1="21" x2="16.65" y2="16.65"/></svg><input type="text" id="searchInput" placeholder="Buscar especie…" oninput="filterSpecies()"></div>
-      <div class="filter-scroll" id="filterChips"></div>
-      <div class="dex-header"><div class="dex-header-row"><span class="dex-prog-lbl">Colección</span><span class="dex-prog-num" id="dexNum">0 <span>/ 0</span></span></div><div class="prog-track"><div class="prog-fill" id="dexFill" style="width:0%"></div></div></div>
-      <div class="sp-list" id="spList"></div>
+      <!-- TABS -->
+      <div style="display:flex;border-bottom:1px solid var(--border);margin-bottom:10px;">
+        <button class="rtab on" id="dexTab1" onclick="switchDexTab('seen',this)" style="flex:1">Mis avistamientos</button>
+        <button class="rtab" id="dexTab2" onclick="switchDexTab('search',this)" style="flex:1">Explorar</button>
+      </div>
+
+      <!-- MIS AVISTAMIENTOS -->
+      <div id="dexSeen">
+        <div class="dex-header"><div class="dex-header-row"><span class="dex-prog-lbl">Registrados</span><span class="dex-prog-num" id="dexNum">0 <span>especies</span></span></div><div class="prog-track"><div class="prog-fill" id="dexFill" style="width:0%"></div></div></div>
+        <div class="sp-list" id="spList"></div>
+      </div>
+
+      <!-- EXPLORAR / BUSCAR -->
+      <div id="dexSearch" style="display:none">
+        <div class="search-bar" style="margin-bottom:8px">
+          <svg width="13" height="13" viewBox="0 0 24 24" fill="none" stroke="var(--text3)" stroke-width="2"><circle cx="11" cy="11" r="8"/><line x1="21" y1="21" x2="16.65" y2="16.65"/></svg>
+          <input type="text" id="inatSearchInput" placeholder="Busca cualquier animal…" oninput="inatSearch(this.value)" autocomplete="off">
+          <span id="inatSpinner" style="display:none;width:14px;height:14px;border:1.5px solid var(--border);border-top-color:var(--green2);border-radius:50%;animation:spin .7s linear infinite;flex-shrink:0"></span>
+        </div>
+        <div style="font-size:10px;color:var(--text3);margin-bottom:10px;letter-spacing:.04em">Base de datos mundial — más de 300.000 especies</div>
+        <div class="sp-list" id="inatResults">
+          <div class="empty-state"><div class="empty-icon" style="font-size:28px">🔍</div>Escribe el nombre de un animal<br>en español o en latín</div>
+        </div>
+      </div>
     </div>
     <div class="screen" id="screen-feed"><div class="section-head"><em>Feed</em> social</div><div id="feedContent"></div></div>
     <div class="screen" id="screen-ranking"><div class="section-head">Rankings <em>& Social</em></div><div class="ranking-tabs"><button class="rtab on" onclick="setRankTab('global',this)">Global</button><button class="rtab" onclick="setRankTab('amigos',this)">Amigos</button></div><div id="rankContent"></div></div>
@@ -579,7 +599,7 @@ window.doRegister=async()=>{
 window.doLogout=async()=>{await signOut(auth);};
 
 function initApp(){
-  updateHeader();renderHome();renderFilterChips();renderSpeciesList();goTab('home');
+  updateHeader();renderHome();renderSeenList();goTab('home');
 }
 
 function updateHeader(){
@@ -647,35 +667,148 @@ async function renderNearby(){
   }
 }
 
-function renderFilterChips(){
-  document.getElementById('filterChips').innerHTML=CATS.map(c=>`<div class="filter-chip${c===filterCat?' on':''}" onclick="setCat('${c}')">${c}</div>`).join('');
-}
-window.setCat=c=>{filterCat=c;renderFilterChips();filterSpecies();};
-window.filterSpecies=()=>{
-  const q=(document.getElementById('searchInput').value||'').toLowerCase();
-  const list=SPECIES.filter(s=>(filterCat==='Todas'||s.cat===filterCat)&&(!q||s.name.toLowerCase().includes(q)||s.sci.toLowerCase().includes(q)));
-  renderSpeciesList(list);
+// ══ DEX TABS ══
+window.switchDexTab=function(tab,el){
+  document.querySelectorAll('.rtab').forEach(b=>b.classList.remove('on'));
+  el.classList.add('on');
+  document.getElementById('dexSeen').style.display=tab==='seen'?'block':'none';
+  document.getElementById('dexSearch').style.display=tab==='search'?'block':'none';
+  if(tab==='seen') renderSeenList();
 };
 
-async function renderSpeciesList(list){
-  if(!list)list=SPECIES;
-  const n=list.filter(s=>seen.includes(s.id)).length;
-  document.getElementById('dexNum').innerHTML=n+' <span>/ '+list.length+'</span>';
-  document.getElementById('dexFill').style.width=(list.length?(n/list.length)*100:0)+'%';
-  document.getElementById('spList').innerHTML=list.map(s=>{
-    const ok=seen.includes(s.id);
-    return `<div class="sp-row${ok?'':' locked'}" onclick="openSpecies(${s.id})">
-      <div class="sp-img"><div class="sp-img-ph" id="spph-${s.id}">${s.e}</div>${ok?'<div class="sp-check">✓</div>':''}</div>
-      <div class="sp-body"><div class="sp-name">${s.name}</div><div class="sp-sci">${s.sci}</div><div class="rarity">${rarityBars(s.rar)}</div><div class="sp-tags"><span class="tag">${s.cat}</span>${s.tags.slice(0,1).map(t=>`<span class="tag">${t}</span>`).join('')}</div></div>
+// ══ iNATURALIST SEARCH ══
+let inatSearchTimer=null;
+window.inatSearch=function(q){
+  clearTimeout(inatSearchTimer);
+  const results=document.getElementById('inatResults');
+  const spinner=document.getElementById('inatSpinner');
+  if(!q||q.length<2){
+    results.innerHTML='<div class="empty-state"><div class="empty-icon" style="font-size:28px">🔍</div>Escribe el nombre de un animal</div>';
+    return;
+  }
+  spinner.style.display='block';
+  inatSearchTimer=setTimeout(async()=>{
+    try{
+      const r=await fetch(`https://api.inaturalist.org/v1/taxa?q=${encodeURIComponent(q)}&rank=species,subspecies&per_page=20&locale=es&is_active=true&iconic_taxa=Animalia,Aves,Mammalia,Reptilia,Amphibia,Actinopterygii,Mollusca,Arachnida,Insecta`,{headers:{Accept:'application/json'}});
+      const d=await r.json();
+      spinner.style.display='none';
+      if(!d.results||!d.results.length){
+        results.innerHTML='<div class="empty-state">Sin resultados para "'+q+'"</div>';
+        return;
+      }
+      results.innerHTML=d.results.map(t=>{
+        const name=t.preferred_common_name||t.name;
+        const photo=t.default_photo?.square_url||null;
+        const obs=t.observations_count||0;
+        const rarity=obs>100000?'Común':obs>10000?'Poco común':obs>1000?'Rara':'Muy rara';
+        const rarCls=obs>100000?'f-c':obs>10000?'f-u':obs>1000?'f-r':'f-l';
+        const isSeen=sights.some(s=>s.inatId===t.id||s.speciesSci===t.name);
+        return `<div class="sp-row${isSeen?' locked':''}" onclick="openInatSpecies(${t.id},'${t.name.replace(/'/g,"\'")}','${name.replace(/'/g,"\'")}','${photo||''}',${obs})">
+          <div class="sp-img">${photo?`<img src="${photo}" style="width:100%;height:100%;object-fit:cover;">`:`<div class="sp-img-ph">🌿</div>`}${isSeen?'<div class="sp-check">✓</div>':''}</div>
+          <div class="sp-body">
+            <div class="sp-name">${name}</div>
+            <div class="sp-sci">${t.name}</div>
+            <div class="rarity" style="margin-top:3px">
+              ${[1,2,3,4,5].map(i=>`<div class="rseg${i<=({'f-c':1,'f-u':2,'f-r':3,'f-l':4}[rarCls])?' '+rarCls:''}"></div>`).join('')}
+              <span class="rlabel">${rarity}</span>
+            </div>
+          </div>
+          <div class="sp-xp"><div class="sp-xp-num">${obs>100000?50:obs>10000?150:obs>1000?300:500}</div><div class="sp-xp-lbl">XP</div></div>
+        </div>`;
+      }).join('');
+    }catch(e){
+      spinner.style.display='none';
+      results.innerHTML='<div class="empty-state">Error buscando. Comprueba la conexión.</div>';
+    }
+  },500);
+};
+
+window.openInatSpecies=async function(inatId,sciName,commonName,photo,obsCount){
+  const xpVal=obsCount>100000?50:obsCount>10000?150:obsCount>1000?300:500;
+  const isSeen=sights.some(s=>s.inatId===inatId||s.speciesSci===sciName);
+  // Show quick modal
+  const modal=document.getElementById('speciesModal');
+  document.getElementById('mdImgWrap').innerHTML=photo?`<img class="modal-img" src="${photo.replace('square','medium')}" alt="${commonName}">`:`<div class="modal-img-ph">🌿</div>`;
+  document.getElementById('mdName').textContent=commonName;
+  document.getElementById('mdSci').textContent=sciName;
+  document.getElementById('mdRarity').innerHTML='';
+  document.getElementById('mdCat').textContent='Animal';
+  document.getElementById('mdHab').textContent='—';
+  document.getElementById('mdRar').textContent=obsCount>100000?'Común':obsCount>10000?'Poco común':obsCount>1000?'Rara':'Muy rara';
+  document.getElementById('mdXp').textContent='+'+xpVal+' XP';
+  document.getElementById('mdDesc').textContent=obsCount.toLocaleString()+' observaciones registradas en iNaturalist';
+  document.getElementById('mdDist').textContent='Consulta iNaturalist para distribución detallada';
+  document.getElementById('mdSeason').textContent='—';
+  document.getElementById('mdTags').innerHTML='';
+  document.getElementById('mdCur').innerHTML='';
+  const btn=document.getElementById('mdSeenBtn');
+  if(isSeen){btn.textContent='✓ Ya registrado — quitar';btn.style.cssText='background:var(--card2);color:var(--green2);border:1px solid var(--green2);';}
+  else{btn.textContent='Registrar avistamiento';btn.style.cssText='background:var(--green2);color:var(--bg);border:none;';}
+  btn.onclick=async()=>{
+    if(isSeen){
+      sights=sights.filter(s=>s.inatId!==inatId&&s.speciesSci!==sciName);
+      xp=Math.max(0,xp-xpVal);
+      await saveProfile();
+      showToast(commonName+' eliminado');
+    }else{
+      sights.push({inatId,speciesSci:sciName,speciesName:commonName,date:new Date().toLocaleDateString('es-ES',{day:'2-digit',month:'short',year:'numeric'})});
+      xp+=xpVal;
+      await saveProfile();
+      if(currentUser){
+        await addDoc(collection(db,'sightings'),{userId:currentUser.uid,speciesId:inatId,speciesName:commonName,speciesSci:sciName,userName:userProfile?.name||'Explorador',userPhoto:userProfile?.photo||null,xp:xpVal,date:new Date().toISOString(),likes:0,emoji:'🌿',inatId,photo:photo||null});
+      }
+      celebrate(commonName);
+    }
+    updateHeader();
+    closeModal();
+    renderSeenList();
+    inatSearch(document.getElementById('inatSearchInput').value);
+  };
+  modal.classList.add('open');
+  modal.scrollTop=0;
+};
+
+function renderFilterChips(){} // kept for compatibility
+window.filterSpecies=()=>{};
+
+async function renderSeenList(){
+  // Combine local SPECIES seen + iNat sightings
+  const localSeen=SPECIES.filter(s=>seen.includes(s.id));
+  const inatSeen=sights.filter(s=>s.inatId&&!SPECIES.find(sp=>sp.id===s.inatId));
+  const total=localSeen.length+inatSeen.length;
+  document.getElementById('dexNum').innerHTML=total+' <span>registrados</span>';
+  document.getElementById('dexFill').style.width=Math.min((total/100)*100,100)+'%';
+
+  let html='';
+  // Local species
+  for(const s of localSeen){
+    html+=`<div class="sp-row" onclick="openSpecies(${s.id})">
+      <div class="sp-img"><div class="sp-img-ph" id="spph-${s.id}">${s.e}</div><div class="sp-check">✓</div></div>
+      <div class="sp-body"><div class="sp-name">${s.name}</div><div class="sp-sci">${s.sci}</div><div class="rarity">${rarityBars(s.rar)}</div></div>
       <div class="sp-xp"><div class="sp-xp-num">${s.pts}</div><div class="sp-xp-lbl">XP</div></div>
     </div>`;
-  }).join('');
-  for(const s of list.filter(s=>seen.includes(s.id))){
+  }
+  // iNat sightings
+  for(const s of inatSeen){
+    const photo=s.photo||null;
+    html+=`<div class="sp-row" onclick="openInatSpecies(${s.inatId||0},'${(s.speciesSci||'').replace(/'/g,"\'")}','${(s.speciesName||'').replace(/'/g,"\'")}','${photo||''}',10000)">
+      <div class="sp-img">${photo?`<img src="${photo}" style="width:100%;height:100%;object-fit:cover;">`:'<div class="sp-img-ph">🌿</div>'}<div class="sp-check">✓</div></div>
+      <div class="sp-body"><div class="sp-name">${s.speciesName||'Animal'}</div><div class="sp-sci">${s.speciesSci||''}</div><div style="font-size:9px;color:var(--text3);margin-top:3px">${s.date||''}</div></div>
+      <div class="sp-xp"><div class="sp-xp-num">100</div><div class="sp-xp-lbl">XP</div></div>
+    </div>`;
+  }
+
+  if(!html) html='<div class="empty-state"><div class="empty-icon">🌿</div>Aún sin avistamientos.<br>Usa la cámara o el explorador.</div>';
+  document.getElementById('spList').innerHTML=html;
+
+  // Load wiki images for local species
+  for(const s of localSeen){
     const url=await getWikiImg(s.wiki);if(!url)continue;
     const el=document.getElementById('spph-'+s.id);
     if(el)el.innerHTML=`<img src="${url}" style="width:100%;height:100%;object-fit:cover;">`;
   }
 }
+async function renderSpeciesList(){await renderSeenList();}
 
 window.openSpecies=async id=>{
   currentSpId=id;
@@ -716,7 +849,7 @@ window.toggleSeen=async()=>{
     }
     celebrate(s.name);
   }
-  await saveProfile();updateHeader();openSpecies(id);renderSpeciesList();renderProfile();
+  await saveProfile();updateHeader();openSpecies(id);renderSeenList();renderProfile();
   document.getElementById('homeSeen').textContent=seen.length;
   document.getElementById('homeXp').textContent=xp;
 };
