@@ -1,5 +1,5 @@
-const CACHE='naturadex-v1';
-const ASSETS=['/', 'index.html'];
+const CACHE='naturadex-v2';
+const ASSETS=['/','index.html','manifest.json'];
 self.addEventListener('install', e => {
   e.waitUntil(caches.open(CACHE).then(c => c.addAll(ASSETS)));
   self.skipWaiting();
@@ -9,10 +9,12 @@ self.addEventListener('activate', e => {
   self.clients.claim();
 });
 self.addEventListener('fetch', e => {
-  if (e.request.url.includes('fonts.') || e.request.url.includes('wikipedia.org')) return;
-  e.respondWith(caches.match(e.request).then(r => r || fetch(e.request).then(res => {
-    const clone = res.clone();
-    caches.open(CACHE).then(c => c.put(e.request, clone));
-    return res;
-  })));
+  if (e.request.method !== 'GET') return;
+  if (e.request.url.includes('api.anthropic.com')) return;
+  if (e.request.url.includes('netlify/functions')) return;
+  if (e.request.url.includes('firebase')) return;
+  if (e.request.url.includes('googleapis')) return;
+  if (e.request.url.includes('wikipedia')) return;
+  if (e.request.url.includes('gstatic')) return;
+  e.respondWith(caches.match(e.request).then(r => r || fetch(e.request)));
 });
