@@ -1,0 +1,975 @@
+<!DOCTYPE html>
+<html lang="es">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
+<meta name="apple-mobile-web-app-capable" content="yes">
+<meta name="apple-mobile-web-app-status-bar-style" content="black-translucent">
+<meta name="apple-mobile-web-app-title" content="NaturaDex">
+<meta name="theme-color" content="#0A0A0A">
+<title>NaturaDex</title>
+<link rel="manifest" href="manifest.json">
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link href="https://fonts.googleapis.com/css2?family=DM+Serif+Display:ital@0;1&family=Inter:wght@300;400;500;600&display=swap" rel="stylesheet">
+<style>
+*{box-sizing:border-box;margin:0;padding:0;-webkit-tap-highlight-color:transparent;}
+:root{--bg:#0A0A0A;--bg2:#111111;--card:#161616;--card2:#1E1E1E;--border:#252525;--text:#F0EFE9;--text2:#8A8A8A;--text3:#555555;--green:#B8CCB0;--green2:#7FA090;--accent:#C8D5B9;--gold:#C9A96E;--rare:#7A9BB5;--legend:#B8A0C8;--danger:#BF7A7A;--safe:#7ABF8A;}
+html,body{height:100%;overflow:hidden;background:var(--bg);}
+body{font-family:'Inter',sans-serif;font-weight:300;color:var(--text);}
+.app{max-width:430px;margin:0 auto;width:100%;height:100%;display:flex;flex-direction:column;overflow:hidden;}
+/* HEADER */
+.hdr{background:var(--bg2);border-bottom:1px solid var(--border);flex-shrink:0;padding:env(safe-area-inset-top,14px) 16px 12px;}
+.hdr-row{display:flex;align-items:center;justify-content:space-between;}
+.hdr-logo{font-family:'DM Serif Display',serif;font-size:22px;letter-spacing:-.02em;}
+.hdr-logo em{font-style:italic;color:var(--green2);}
+.hdr-sub{font-size:9px;letter-spacing:.14em;text-transform:uppercase;color:var(--text3);margin-top:1px;}
+.hdr-right{display:flex;gap:8px;align-items:center;}
+.hdr-xp{background:var(--card);border:1px solid var(--border);padding:4px 10px;font-size:10px;font-weight:500;color:var(--green2);}
+.hdr-avatar{width:34px;height:34px;border-radius:50%;background:var(--card2);border:1px solid var(--border);overflow:hidden;cursor:pointer;display:flex;align-items:center;justify-content:center;flex-shrink:0;}
+.hdr-avatar img{width:100%;height:100%;object-fit:cover;}
+/* NAV */
+.nav{display:flex;background:var(--bg2);border-top:1px solid var(--border);flex-shrink:0;padding-bottom:env(safe-area-inset-bottom,0px);}
+.nav-btn{flex:1;padding:10px 2px 8px;font-size:8px;font-weight:500;color:var(--text3);border:none;background:none;cursor:pointer;display:flex;flex-direction:column;align-items:center;gap:3px;font-family:'Inter',sans-serif;letter-spacing:.08em;text-transform:uppercase;border-top:2px solid transparent;transition:all .15s;}
+.nav-btn svg{width:18px;height:18px;stroke:currentColor;stroke-width:1.5;fill:none;stroke-linecap:round;stroke-linejoin:round;}
+.nav-btn.on{color:var(--green2);border-top-color:var(--green2);}
+/* CONTENT */
+.content{flex:1;overflow-y:auto;-webkit-overflow-scrolling:touch;}
+.screen{display:none;padding:16px;}
+.screen.on{display:block;}
+/* TYPOGRAPHY */
+.eyebrow{font-size:9px;letter-spacing:.16em;text-transform:uppercase;color:var(--text3);margin-bottom:6px;}
+.section-head{font-family:'DM Serif Display',serif;font-size:20px;letter-spacing:-.02em;margin-bottom:12px;}
+.section-head em{font-style:italic;color:var(--green2);}
+/* RARITY */
+.rarity{display:flex;gap:3px;align-items:center;margin-top:4px;}
+.rseg{height:2px;width:13px;background:var(--border);border-radius:1px;}
+.rseg.f-c{background:var(--green2);}
+.rseg.f-u{background:var(--gold);}
+.rseg.f-r{background:var(--rare);}
+.rseg.f-l{background:var(--legend);}
+.rlabel{font-size:9px;letter-spacing:.07em;text-transform:uppercase;color:var(--text3);margin-left:5px;}
+/* TAGS */
+.tag{font-size:9px;padding:2px 7px;border:1px solid var(--border);color:var(--text3);display:inline-block;margin:2px 2px 0 0;}
+.tag.danger{border-color:rgba(191,122,122,.4);color:var(--danger);}
+/* BUTTONS */
+.btn{border:none;cursor:pointer;font-family:'Inter',sans-serif;font-size:11px;font-weight:500;letter-spacing:.08em;text-transform:uppercase;padding:11px 20px;transition:opacity .15s;}
+.btn:active{opacity:.7;}
+.btn-primary{background:var(--text);color:var(--bg);}
+.btn-ghost{background:transparent;color:var(--text2);border:1px solid var(--border);}
+.btn-green{background:var(--green2);color:var(--bg);}
+.btn-full{width:100%;}
+/* AUTH */
+.auth-screen{position:fixed;inset:0;background:var(--bg);z-index:500;display:flex;flex-direction:column;padding:60px 28px 40px;max-width:430px;margin:0 auto;overflow-y:auto;}
+.auth-screen.hidden{display:none;}
+.auth-logo{font-family:'DM Serif Display',serif;font-size:36px;letter-spacing:-.02em;margin-bottom:6px;}
+.auth-logo em{font-style:italic;color:var(--green2);}
+.auth-tagline{font-size:10px;letter-spacing:.14em;text-transform:uppercase;color:var(--text3);margin-bottom:40px;}
+.auth-title{font-family:'DM Serif Display',serif;font-size:24px;margin-bottom:8px;}
+.auth-sub{font-size:13px;color:var(--text2);line-height:1.6;margin-bottom:24px;}
+.auth-label{font-size:9px;letter-spacing:.12em;text-transform:uppercase;color:var(--text3);margin-bottom:6px;display:block;}
+.auth-input{width:100%;background:var(--card);border:1px solid var(--border);color:var(--text);font-family:'Inter',sans-serif;font-size:15px;font-weight:300;padding:13px;outline:none;margin-bottom:10px;-webkit-appearance:none;border-radius:0;}
+.auth-input:focus{border-color:var(--green2);}
+.auth-error{font-size:11px;color:var(--danger);margin-bottom:10px;min-height:16px;}
+.auth-switch{font-size:12px;color:var(--text3);text-align:center;margin-top:16px;cursor:pointer;}
+.auth-switch span{color:var(--green2);text-decoration:underline;}
+.auth-photo-row{display:flex;align-items:center;gap:16px;margin-bottom:16px;}
+.auth-photo-circle{width:64px;height:64px;border-radius:50%;background:var(--card);border:1px solid var(--border);display:flex;align-items:center;justify-content:center;font-size:28px;cursor:pointer;overflow:hidden;flex-shrink:0;}
+.auth-photo-circle img{width:100%;height:100%;object-fit:cover;}
+.auth-photo-info{font-size:11px;color:var(--text3);line-height:1.5;}
+/* LANDING */
+.aod-card{background:var(--card);border:1px solid var(--border);overflow:hidden;margin-bottom:10px;cursor:pointer;}
+.aod-img{width:100%;height:200px;object-fit:cover;display:block;}
+.aod-img-ph{width:100%;height:200px;background:var(--card2);display:flex;align-items:center;justify-content:center;font-size:64px;}
+.aod-body{padding:14px;}
+.aod-eyebrow{font-size:9px;letter-spacing:.16em;text-transform:uppercase;color:var(--green2);margin-bottom:6px;display:flex;align-items:center;gap:8px;}
+.aod-eyebrow::before{content:'';display:block;width:16px;height:1px;background:var(--green2);}
+.aod-name{font-family:'DM Serif Display',serif;font-size:22px;letter-spacing:-.02em;margin-bottom:2px;}
+.aod-sci{font-size:11px;font-style:italic;color:var(--text3);margin-bottom:8px;}
+.aod-fact{font-size:12px;color:var(--text2);line-height:1.65;border-left:2px solid var(--green2);padding-left:10px;margin-top:10px;}
+.stats-strip{display:grid;grid-template-columns:repeat(3,1fr);gap:1px;background:var(--border);border:1px solid var(--border);margin-bottom:10px;}
+.sstat{background:var(--card);padding:14px 8px;text-align:center;}
+.sstat-num{font-family:'DM Serif Display',serif;font-size:24px;}
+.sstat-lbl{font-size:8px;letter-spacing:.1em;text-transform:uppercase;color:var(--text3);margin-top:3px;}
+.streak-bar{background:var(--card);border:1px solid var(--border);padding:12px 14px;margin-bottom:10px;display:flex;align-items:center;gap:12px;}
+.streak-num{font-family:'DM Serif Display',serif;font-size:28px;color:var(--gold);line-height:1;flex-shrink:0;}
+.streak-info{flex:1;}
+.streak-title{font-size:12px;font-weight:500;margin-bottom:1px;}
+.streak-sub{font-size:10px;color:var(--text3);}
+.nearby-grid{display:grid;grid-template-columns:1fr 1fr;gap:8px;margin-bottom:12px;}
+.nearby-card{background:var(--card);border:1px solid var(--border);cursor:pointer;overflow:hidden;position:relative;}
+.nearby-card:active{opacity:.8;}
+.nc-img{width:100%;height:90px;object-fit:cover;display:block;}
+.nc-img-ph{width:100%;height:90px;background:var(--card2);display:flex;align-items:center;justify-content:center;font-size:32px;}
+.nc-body{padding:8px 10px 10px;}
+.nc-name{font-size:11px;font-weight:500;margin-bottom:1px;}
+.nc-sci{font-size:9px;font-style:italic;color:var(--text3);}
+.nc-new{position:absolute;top:6px;right:6px;font-size:8px;background:var(--green2);color:var(--bg);padding:2px 6px;text-transform:uppercase;font-weight:500;}
+.event-row{background:var(--card);border:1px solid var(--border);padding:12px 14px;margin-bottom:7px;display:flex;gap:12px;cursor:pointer;}
+.event-row:active{background:var(--card2);}
+.event-icon{font-size:20px;flex-shrink:0;margin-top:1px;}
+.event-title{font-size:12px;font-weight:500;margin-bottom:2px;}
+.event-desc{font-size:11px;color:var(--text2);line-height:1.5;}
+.event-time{font-size:9px;color:var(--green2);margin-top:3px;}
+/* DEX */
+.search-bar{background:var(--card);border:1px solid var(--border);display:flex;align-items:center;gap:8px;padding:10px 12px;margin-bottom:8px;}
+.search-bar input{flex:1;background:none;border:none;color:var(--text);font-family:'Inter',sans-serif;font-size:13px;outline:none;}
+.search-bar input::placeholder{color:var(--text3);}
+.filter-scroll{display:flex;gap:6px;overflow-x:auto;padding-bottom:2px;margin-bottom:10px;scrollbar-width:none;}
+.filter-scroll::-webkit-scrollbar{display:none;}
+.filter-chip{flex-shrink:0;font-size:9px;letter-spacing:.08em;text-transform:uppercase;padding:5px 10px;border:1px solid var(--border);color:var(--text3);cursor:pointer;white-space:nowrap;}
+.filter-chip.on{border-color:var(--green2);color:var(--green2);background:rgba(127,160,144,.08);}
+.dex-header{background:var(--card);border:1px solid var(--border);padding:11px 12px;margin-bottom:8px;}
+.dex-header-row{display:flex;justify-content:space-between;margin-bottom:5px;}
+.dex-prog-lbl{font-size:10px;color:var(--text2);}
+.dex-prog-num{font-family:'DM Serif Display',serif;font-size:14px;}
+.dex-prog-num span{color:var(--text3);font-size:11px;}
+.prog-track{height:1px;background:var(--border);}
+.prog-fill{height:100%;background:var(--green2);transition:width .4s;}
+.sp-list{display:flex;flex-direction:column;gap:5px;}
+.sp-row{background:var(--card);border:1px solid var(--border);display:flex;overflow:hidden;cursor:pointer;}
+.sp-row:active{background:var(--card2);}
+.sp-row.locked{opacity:.38;}
+.sp-img{width:68px;height:68px;flex-shrink:0;background:var(--card2);position:relative;overflow:hidden;}
+.sp-img img{width:100%;height:100%;object-fit:cover;}
+.sp-img-ph{width:100%;height:100%;display:flex;align-items:center;justify-content:center;font-size:26px;}
+.sp-check{position:absolute;bottom:3px;right:3px;width:14px;height:14px;background:var(--green2);border-radius:50%;display:flex;align-items:center;justify-content:center;font-size:8px;color:var(--bg);font-weight:700;}
+.sp-body{flex:1;padding:9px 10px;min-width:0;}
+.sp-name{font-size:12px;font-weight:500;}
+.sp-sci{font-size:10px;font-style:italic;color:var(--text3);margin-bottom:2px;}
+.sp-tags{display:flex;flex-wrap:wrap;gap:2px;margin-top:4px;}
+.sp-xp{padding:9px 10px;text-align:right;flex-shrink:0;display:flex;flex-direction:column;justify-content:center;}
+.sp-xp-num{font-family:'DM Serif Display',serif;font-size:16px;color:var(--green2);}
+.sp-xp-lbl{font-size:8px;color:var(--text3);}
+/* MODAL */
+.modal-overlay{position:fixed;inset:0;background:var(--bg);z-index:200;display:none;overflow-y:auto;}
+.modal-overlay.open{display:block;}
+.modal{padding:0 0 40px;max-width:430px;margin:0 auto;}
+.modal-back{display:flex;align-items:center;gap:8px;color:var(--text2);font-size:11px;letter-spacing:.08em;text-transform:uppercase;cursor:pointer;padding:env(safe-area-inset-top,14px) 16px 14px;background:none;border:none;font-family:'Inter',sans-serif;}
+.modal-back svg{width:14px;height:14px;stroke:currentColor;stroke-width:1.5;fill:none;}
+.modal-img{width:100%;height:260px;object-fit:cover;display:block;}
+.modal-img-ph{width:100%;height:260px;background:var(--card2);display:flex;align-items:center;justify-content:center;font-size:80px;}
+.modal-body{padding:16px;}
+.modal-name{font-family:'DM Serif Display',serif;font-size:26px;letter-spacing:-.02em;margin-bottom:2px;}
+.modal-sci{font-size:12px;font-style:italic;color:var(--text3);margin-bottom:10px;}
+.modal-btns{display:flex;gap:8px;margin-top:12px;}
+.detail-grid{display:grid;grid-template-columns:1fr 1fr;gap:1px;background:var(--border);border:1px solid var(--border);margin:10px 16px;}
+.detail-cell{background:var(--card);padding:10px 12px;}
+.detail-lbl{font-size:9px;letter-spacing:.1em;text-transform:uppercase;color:var(--text3);margin-bottom:2px;}
+.detail-val{font-size:12px;font-weight:500;}
+.info-block{margin:8px 16px;background:var(--card);border:1px solid var(--border);padding:12px;}
+.info-title{font-size:9px;letter-spacing:.1em;text-transform:uppercase;color:var(--text3);margin-bottom:7px;padding-bottom:6px;border-bottom:1px solid var(--border);}
+.info-text{font-size:12px;color:var(--text2);line-height:1.65;}
+.cur-item{padding:7px 0;border-bottom:1px solid var(--border);font-size:12px;color:var(--text2);line-height:1.5;display:flex;gap:7px;}
+.cur-item:last-child{border-bottom:none;}
+.cur-item::before{content:'—';color:var(--text3);flex-shrink:0;}
+/* CAMERA */
+.cam-screen{display:none;position:fixed;inset:0;background:#000;z-index:300;flex-direction:column;}
+.cam-screen.open{display:flex;}
+.cam-video-wrap{flex:1;position:relative;overflow:hidden;}
+video#camVideo{position:absolute;inset:0;width:100%;height:100%;object-fit:cover;}
+.cam-frame{position:absolute;inset:50px;border:1px solid rgba(200,213,185,.2);pointer-events:none;}
+.cam-corner{position:absolute;width:16px;height:16px;border-color:var(--accent);border-style:solid;}
+.cam-corner.tl{top:-1px;left:-1px;border-width:2px 0 0 2px;}
+.cam-corner.tr{top:-1px;right:-1px;border-width:2px 2px 0 0;}
+.cam-corner.bl{bottom:-1px;left:-1px;border-width:0 0 2px 2px;}
+.cam-corner.br{bottom:-1px;right:-1px;border-width:0 2px 2px 0;}
+.cam-scan{position:absolute;left:0;right:0;height:1px;background:linear-gradient(90deg,transparent,var(--green2),transparent);animation:scan 2.5s ease-in-out infinite;}
+@keyframes scan{0%,100%{top:52px;opacity:0;}10%{opacity:1;}90%{opacity:1;}99%{top:calc(100% - 52px);opacity:0;}}
+.cam-top{position:absolute;top:0;left:0;right:0;padding:env(safe-area-inset-top,14px) 16px 14px;display:flex;justify-content:space-between;align-items:center;z-index:5;background:linear-gradient(to bottom,rgba(0,0,0,.7),transparent);}
+.cam-close-btn{background:rgba(0,0,0,.5);border:1px solid rgba(255,255,255,.2);color:#fff;font-size:10px;letter-spacing:.1em;text-transform:uppercase;padding:7px 14px;cursor:pointer;font-family:'Inter',sans-serif;}
+.cam-tip{font-size:10px;color:rgba(255,255,255,.5);}
+.cam-no-access{position:absolute;inset:0;display:none;flex-direction:column;align-items:center;justify-content:center;gap:10px;z-index:4;color:var(--text2);font-size:12px;text-align:center;padding:20px;}
+.cam-analyzing{position:absolute;inset:0;background:rgba(10,10,10,.7);display:none;align-items:center;justify-content:center;flex-direction:column;gap:12px;z-index:6;}
+.cam-analyzing.show{display:flex;}
+.cam-analyzing-text{font-size:12px;color:var(--text2);letter-spacing:.08em;text-transform:uppercase;}
+.cam-bottom{background:rgba(10,10,10,.96);border-top:1px solid var(--border);padding:14px;z-index:5;}
+.cam-result-name{font-family:'DM Serif Display',serif;font-size:20px;margin-bottom:1px;}
+.cam-result-sci{font-size:10px;font-style:italic;color:var(--text3);margin-bottom:8px;}
+.cam-conf-row{display:flex;justify-content:space-between;margin-bottom:8px;font-size:10px;color:var(--text2);}
+.cam-conf-row span{color:var(--green2);font-weight:500;}
+.cam-alts{display:flex;gap:5px;margin-bottom:11px;}
+.cam-alt{flex:1;background:var(--card2);border:1px solid var(--border);padding:6px 7px;}
+.cam-alt-name{font-size:10px;color:var(--text2);}
+.cam-alt-pct{font-size:9px;color:var(--text3);margin-top:1px;}
+.cam-controls{background:rgba(10,10,10,.96);border-top:1px solid var(--border);padding:14px;z-index:5;}
+.cam-btns-row{display:flex;align-items:center;justify-content:space-around;margin-bottom:8px;}
+.cam-shutter{width:58px;height:58px;border-radius:50%;background:var(--text);border:none;cursor:pointer;display:flex;align-items:center;justify-content:center;}
+.cam-shutter svg{width:22px;height:22px;stroke:#000;stroke-width:1.5;fill:none;}
+.cam-side-btn{background:rgba(255,255,255,.08);border:1px solid rgba(255,255,255,.12);color:rgba(255,255,255,.7);font-size:9px;padding:8px 12px;cursor:pointer;font-family:'Inter',sans-serif;letter-spacing:.06em;text-transform:uppercase;}
+.cam-hint{font-size:9px;color:var(--text3);text-align:center;letter-spacing:.06em;text-transform:uppercase;}
+/* FEED */
+.feed-item{background:var(--card);border:1px solid var(--border);margin-bottom:10px;overflow:hidden;}
+.feed-header{display:flex;align-items:center;gap:10px;padding:11px 12px;}
+.feed-avatar{width:32px;height:32px;border-radius:50%;background:var(--card2);border:1px solid var(--border);overflow:hidden;flex-shrink:0;display:flex;align-items:center;justify-content:center;font-size:14px;font-weight:500;}
+.feed-avatar img{width:100%;height:100%;object-fit:cover;}
+.feed-user{font-size:12px;font-weight:500;}
+.feed-meta{font-size:10px;color:var(--text3);margin-top:1px;}
+.feed-img-ph{width:100%;height:180px;display:flex;align-items:center;justify-content:center;font-size:56px;background:var(--card2);cursor:pointer;}
+.feed-body{padding:11px 12px;}
+.feed-sp-name{font-size:13px;font-weight:500;margin-bottom:2px;}
+.feed-sp-sci{font-size:10px;font-style:italic;color:var(--text3);margin-bottom:6px;}
+.feed-likes{display:flex;align-items:center;gap:14px;padding:8px 12px;border-top:1px solid var(--border);}
+.feed-like-btn{background:none;border:none;color:var(--text3);font-size:11px;cursor:pointer;font-family:'Inter',sans-serif;display:flex;align-items:center;gap:5px;padding:0;}
+.feed-like-btn.liked{color:var(--danger);}
+.feed-like-btn svg{width:14px;height:14px;stroke:currentColor;stroke-width:1.5;fill:none;}
+.feed-like-btn.liked svg{fill:var(--danger);}
+/* RANKING */
+.ranking-tabs{display:flex;border-bottom:1px solid var(--border);margin-bottom:10px;}
+.rtab{flex:1;padding:9px;font-size:9px;letter-spacing:.1em;text-transform:uppercase;color:var(--text3);text-align:center;cursor:pointer;border-bottom:2px solid transparent;margin-bottom:-1px;background:none;border-left:none;border-right:none;border-top:none;font-family:'Inter',sans-serif;}
+.rtab.on{color:var(--green2);border-bottom-color:var(--green2);}
+.my-rank-card{background:var(--card);border:1px solid var(--green2);padding:12px;margin-bottom:8px;display:flex;gap:10px;align-items:center;}
+.my-rank-pos{font-family:'DM Serif Display',serif;font-size:28px;color:var(--green2);width:36px;text-align:center;flex-shrink:0;}
+.my-rank-av{width:36px;height:36px;border-radius:50%;overflow:hidden;background:var(--card2);flex-shrink:0;display:flex;align-items:center;justify-content:center;font-size:16px;font-weight:500;}
+.my-rank-av img{width:100%;height:100%;object-fit:cover;}
+.my-rank-info{flex:1;}
+.my-rank-name{font-size:13px;font-weight:500;}
+.my-rank-sub{font-size:9px;color:var(--text3);margin-top:1px;}
+.my-rank-score{font-family:'DM Serif Display',serif;font-size:20px;color:var(--green2);}
+.rank-row{background:var(--card);border:1px solid var(--border);padding:9px 11px;margin-bottom:5px;display:flex;gap:9px;align-items:center;}
+.rank-pos{font-family:'DM Serif Display',serif;font-size:16px;color:var(--text3);width:24px;text-align:center;flex-shrink:0;}
+.rank-pos.top{color:var(--gold);}
+.rank-av{width:30px;height:30px;border-radius:50%;background:var(--card2);border:1px solid var(--border);display:flex;align-items:center;justify-content:center;font-size:13px;flex-shrink:0;overflow:hidden;font-weight:500;}
+.rank-av img{width:100%;height:100%;object-fit:cover;}
+.rank-info{flex:1;min-width:0;}
+.rank-name{font-size:11px;font-weight:500;}
+.rank-sub{font-size:9px;color:var(--text3);margin-top:1px;}
+.rank-score{font-family:'DM Serif Display',serif;font-size:15px;color:var(--green2);}
+/* PROFILE */
+.prof-hero{background:var(--card);border:1px solid var(--border);padding:20px;text-align:center;margin-bottom:10px;}
+.prof-photo{width:80px;height:80px;border-radius:50%;overflow:hidden;background:var(--card2);border:2px solid var(--border);margin:0 auto 10px;cursor:pointer;display:flex;align-items:center;justify-content:center;font-size:32px;}
+.prof-photo img{width:100%;height:100%;object-fit:cover;}
+.prof-name{font-family:'DM Serif Display',serif;font-size:24px;margin-bottom:2px;}
+.prof-email{font-size:10px;color:var(--text3);margin-bottom:8px;}
+.prof-level{display:inline-flex;gap:6px;background:var(--card2);border:1px solid var(--border);padding:3px 10px;font-size:9px;letter-spacing:.1em;text-transform:uppercase;color:var(--green2);}
+.stats-4{display:grid;grid-template-columns:repeat(4,1fr);gap:1px;background:var(--border);border:1px solid var(--border);margin-bottom:10px;}
+.stat4{background:var(--card);padding:11px 4px;text-align:center;}
+.stat4-num{font-family:'DM Serif Display',serif;font-size:20px;}
+.stat4-lbl{font-size:8px;letter-spacing:.08em;text-transform:uppercase;color:var(--text3);margin-top:2px;line-height:1.3;}
+.level-card{background:var(--card);border:1px solid var(--border);padding:12px;margin-bottom:10px;}
+.level-hdr{display:flex;justify-content:space-between;margin-bottom:7px;}
+.level-name{font-size:12px;font-weight:500;}
+.level-num{font-size:11px;color:var(--text3);}
+.level-prog-track{height:1px;background:var(--border);}
+.level-prog-fill{height:100%;background:var(--green2);}
+.level-xp-row{display:flex;justify-content:space-between;margin-top:5px;font-size:10px;color:var(--text3);}
+.cat-grid{display:grid;grid-template-columns:1fr 1fr;gap:6px;margin-bottom:10px;}
+.cat-card{background:var(--card);border:1px solid var(--border);padding:10px;display:flex;gap:8px;align-items:center;}
+.cat-icon{font-size:18px;flex-shrink:0;}
+.cat-info{flex:1;}
+.cat-name{font-size:10px;font-weight:500;margin-bottom:3px;}
+.cat-prog-track{height:1px;background:var(--border);}
+.cat-prog-fill{height:100%;background:var(--green2);}
+.cat-count{font-size:9px;color:var(--text3);margin-top:2px;}
+.logout-btn{background:var(--card);border:1px solid var(--border);color:var(--danger);font-size:11px;letter-spacing:.06em;text-transform:uppercase;padding:11px;cursor:pointer;font-family:'Inter',sans-serif;width:100%;margin-top:4px;}
+/* TOAST & CELEBRATE */
+.toast{position:fixed;bottom:calc(env(safe-area-inset-bottom,0px) + 68px);left:50%;transform:translateX(-50%);background:var(--card2);border:1px solid var(--green2);padding:9px 18px;font-size:12px;color:var(--text);white-space:nowrap;z-index:1000;opacity:0;transition:opacity .2s;pointer-events:none;}
+.toast.show{opacity:1;}
+.celebrate-wrap{position:fixed;inset:0;z-index:900;pointer-events:none;display:none;align-items:center;justify-content:center;}
+.celebrate-wrap.show{display:flex;}
+.celebrate-msg{background:var(--bg2);border:1px solid var(--green2);padding:20px 28px;text-align:center;animation:popin .4s cubic-bezier(.34,1.56,.64,1);}
+@keyframes popin{from{transform:scale(.8);opacity:0;}to{transform:scale(1);opacity:1;}}
+.celebrate-lbl{font-size:9px;letter-spacing:.14em;text-transform:uppercase;color:var(--text3);}
+.celebrate-name{font-family:'DM Serif Display',serif;font-size:22px;color:var(--green2);margin-top:4px;}
+.celebrate-sub{font-size:9px;color:var(--text3);margin-top:3px;}
+.confetti-p{position:fixed;pointer-events:none;animation:cffall linear forwards;}
+@keyframes cffall{to{transform:translateY(110vh) rotate(720deg);opacity:0;}}
+/* UTILS */
+.spinner{width:18px;height:18px;border:2px solid var(--border);border-top-color:var(--green2);border-radius:50%;animation:spin .7s linear infinite;margin:0 auto;}
+@keyframes spin{to{transform:rotate(360deg);}}
+.loading-center{display:flex;align-items:center;justify-content:center;padding:40px;flex-direction:column;gap:12px;color:var(--text3);font-size:12px;}
+.empty-state{padding:32px 20px;text-align:center;color:var(--text3);font-size:12px;line-height:1.8;}
+.empty-icon{font-size:36px;margin-bottom:10px;opacity:.4;}
+</style>
+</head>
+<body>
+<!-- AUTH -->
+<div class="auth-screen" id="authScreen">
+  <div class="auth-logo">Natura<em>Dex</em></div>
+  <div class="auth-tagline">Tu enciclopedia viva del mundo natural</div>
+  <div id="authLogin">
+    <div class="auth-title">Iniciar <em style="font-family:'DM Serif Display',serif;font-style:italic;color:var(--green2)">sesión</em></div>
+    <div class="auth-sub">Accede a tu colección y comparte con la comunidad.</div>
+    <label class="auth-label">Correo electrónico</label>
+    <input class="auth-input" type="email" id="loginEmail" placeholder="tu@correo.com" autocomplete="email">
+    <label class="auth-label">Contraseña</label>
+    <input class="auth-input" type="password" id="loginPass" placeholder="••••••••" autocomplete="current-password">
+    <div class="auth-error" id="loginError"></div>
+    <button class="btn btn-primary btn-full" id="loginBtn" onclick="doLogin()">Entrar</button>
+    <div class="auth-switch" onclick="showRegister()">¿Sin cuenta? <span>Regístrate gratis</span></div>
+  </div>
+  <div id="authRegister" style="display:none">
+    <div class="auth-title">Crear <em style="font-family:'DM Serif Display',serif;font-style:italic;color:var(--green2)">cuenta</em></div>
+    <div class="auth-sub">Únete a la comunidad de exploradores.</div>
+    <div class="auth-photo-row">
+      <div class="auth-photo-circle" id="regPhotoCircle" onclick="document.getElementById('regPhotoInput').click()">📷</div>
+      <div class="auth-photo-info">Sube tu foto<br><span style="color:var(--text3)">Opcional · Toca para elegir</span></div>
+      <input type="file" id="regPhotoInput" accept="image/*" style="display:none" onchange="previewRegPhoto(this)">
+    </div>
+    <label class="auth-label">Nombre de explorador</label>
+    <input class="auth-input" type="text" id="regName" placeholder="ej. alber_natura" maxlength="20">
+    <label class="auth-label">Correo electrónico</label>
+    <input class="auth-input" type="email" id="regEmail" placeholder="tu@correo.com">
+    <label class="auth-label">Contraseña</label>
+    <input class="auth-input" type="password" id="regPass" placeholder="mínimo 6 caracteres">
+    <div class="auth-error" id="regError"></div>
+    <button class="btn btn-primary btn-full" id="regBtn" onclick="doRegister()">Crear cuenta</button>
+    <div class="auth-switch" onclick="showLogin()">¿Ya tienes cuenta? <span>Inicia sesión</span></div>
+  </div>
+  <div style="flex:1;min-height:20px"></div>
+  <div style="font-size:10px;color:var(--text3);text-align:center;margin-top:20px">Tus datos están protegidos con cifrado de Firebase.</div>
+</div>
+
+<!-- CAMERA -->
+<div class="cam-screen" id="camScreen">
+  <div class="cam-video-wrap">
+    <video id="camVideo" autoplay playsinline muted></video>
+    <canvas id="camCanvas" style="display:none"></canvas>
+    <div class="cam-frame"><div class="cam-corner tl"></div><div class="cam-corner tr"></div><div class="cam-corner bl"></div><div class="cam-corner br"></div><div class="cam-scan"></div></div>
+    <div class="cam-no-access" id="camNoAccess"><div style="font-size:40px;opacity:.3">📷</div><div>Cámara no disponible.<br>Usa el botón Galería.</div></div>
+    <div class="cam-analyzing" id="camAnalyzing"><div class="spinner" style="width:28px;height:28px;border-width:3px"></div><div class="cam-analyzing-text">Identificando con IA…</div></div>
+    <div class="cam-top"><button class="cam-close-btn" onclick="closeCamera()">✕ Cerrar</button><span class="cam-tip" id="camTip">Apunta o sube foto</span></div>
+  </div>
+  <div class="cam-bottom" id="camBottom" style="display:none">
+    <div class="cam-result-name" id="camName"></div>
+    <div class="cam-result-sci" id="camSci"></div>
+    <div class="cam-conf-row"><span>Confianza: <span id="camConf"></span></span><span style="color:var(--text3)">Claude IA</span></div>
+    <div class="cam-alts" id="camAlts"></div>
+    <div style="display:flex;gap:8px"><button class="btn btn-ghost" style="flex:1" onclick="resetCamera()">Repetir</button><button class="btn btn-green" style="flex:2" id="camRegBtn" onclick="registerFromCam()">Registrar</button></div>
+  </div>
+  <div class="cam-controls" id="camControls">
+    <div class="cam-btns-row">
+      <button class="cam-side-btn" onclick="document.getElementById('galleryInput').click()">📂 Galería</button>
+      <button class="cam-shutter" onclick="captureAndIdentify()"><svg viewBox="0 0 24 24"><circle cx="12" cy="12" r="8"/><circle cx="12" cy="12" r="3" fill="currentColor"/></svg></button>
+      <button class="cam-side-btn" onclick="flipCamera()">⟳ Voltear</button>
+    </div>
+    <div class="cam-hint" style="margin-top:8px">Haz foto o sube imagen de galería</div>
+    <input type="file" id="galleryInput" accept="image/*" style="display:none" onchange="identifyFromGallery(this)">
+  </div>
+</div>
+
+<!-- SPECIES MODAL -->
+<div class="modal-overlay" id="speciesModal">
+  <div class="modal">
+    <button class="modal-back" onclick="closeModal()"><svg viewBox="0 0 24 24"><polyline points="15,18 9,12 15,6"/></svg>Volver</button>
+    <div id="mdImgWrap"></div>
+    <div class="modal-body">
+      <div class="modal-name" id="mdName"></div><div class="modal-sci" id="mdSci"></div>
+      <div class="rarity" id="mdRarity"></div>
+      <div id="mdTags" style="margin-top:8px;display:flex;flex-wrap:wrap;gap:4px"></div>
+      <div class="modal-btns"><button class="btn btn-green" style="flex:2" id="mdSeenBtn" onclick="toggleSeen()"></button><button class="btn btn-ghost" style="flex:1" onclick="shareSpecies()">Compartir</button></div>
+    </div>
+    <div class="detail-grid">
+      <div class="detail-cell"><div class="detail-lbl">Categoría</div><div class="detail-val" id="mdCat"></div></div>
+      <div class="detail-cell"><div class="detail-lbl">Hábitat</div><div class="detail-val" id="mdHab"></div></div>
+      <div class="detail-cell"><div class="detail-lbl">Rareza</div><div class="detail-val" id="mdRar"></div></div>
+      <div class="detail-cell"><div class="detail-lbl">XP</div><div class="detail-val" id="mdXp" style="color:var(--gold)"></div></div>
+    </div>
+    <div class="info-block"><div class="info-title">Descripción</div><div class="info-text" id="mdDesc"></div></div>
+    <div class="info-block"><div class="info-title">Distribución</div><div class="info-text" id="mdDist"></div></div>
+    <div class="info-block"><div class="info-title">Curiosidades</div><div id="mdCur"></div></div>
+    <div class="info-block"><div class="info-title">Temporada</div><div class="info-text" id="mdSeason"></div></div>
+  </div>
+</div>
+
+<!-- TOAST & CELEBRATE -->
+<div class="toast" id="toast"></div>
+<div class="celebrate-wrap" id="celebWrap"><div class="celebrate-msg"><div class="celebrate-lbl">¡Nueva especie!</div><div class="celebrate-name" id="celebName"></div><div class="celebrate-sub">Añadida a tu colección</div></div></div>
+
+<!-- MAIN APP -->
+<div class="app" id="appMain" style="display:none">
+  <div class="hdr">
+    <div class="hdr-row">
+      <div><div class="hdr-logo">Natura<em>Dex</em></div><div class="hdr-sub" id="hdrSub">Cargando…</div></div>
+      <div class="hdr-right"><div class="hdr-xp" id="hdrXp">0 XP</div><div class="hdr-avatar" id="hdrAvatar" onclick="goTab('profile')"></div></div>
+    </div>
+  </div>
+  <div class="content" id="mainContent">
+    <div class="screen on" id="screen-home">
+      <div class="aod-card" id="aodCard"><div class="aod-img-ph" id="aodImgWrap">🌍</div><div class="aod-body"><div class="aod-eyebrow">Animal del día</div><div class="aod-name" id="aodName">Cargando…</div><div class="aod-sci" id="aodSci"></div><div class="rarity" id="aodRarity"></div><div class="aod-fact" id="aodFact"></div></div></div>
+      <div class="stats-strip"><div class="sstat"><div class="sstat-num" id="homeSeen">0</div><div class="sstat-lbl">Especies</div></div><div class="sstat"><div class="sstat-num" id="homeXp">0</div><div class="sstat-lbl">XP</div></div><div class="sstat"><div class="sstat-num" id="homeRank">—</div><div class="sstat-lbl">Ranking</div></div></div>
+      <div class="streak-bar"><div class="streak-num" id="streakNum">1</div><div class="streak-info"><div class="streak-title">🔥 Racha activa</div><div class="streak-sub">Registra hoy para mantenerla</div></div><button class="btn btn-green" onclick="openCamera()" style="flex-shrink:0;padding:9px 14px;font-size:10px">📷 Identificar</button></div>
+      <div class="eyebrow">Cerca de ti</div><div class="section-head">Posibles <em>avistamientos</em></div>
+      <div class="nearby-grid" id="nearbyGrid"></div>
+      <div class="eyebrow">Esta semana</div><div class="section-head"><em>Eventos</em> activos</div>
+      <div class="event-row" onclick="showToast('Migración de Monarcas activa')"><div class="event-icon">🦋</div><div><div class="event-title">Migración de Monarcas</div><div class="event-desc">La Monarca pasa por la costa atlántica. Rareza aumentada.</div><div class="event-time">3 días · +2× XP</div></div></div>
+    </div>
+    <div class="screen" id="screen-dex">
+      <div class="search-bar"><svg width="13" height="13" viewBox="0 0 24 24" fill="none" stroke="var(--text3)" stroke-width="2"><circle cx="11" cy="11" r="8"/><line x1="21" y1="21" x2="16.65" y2="16.65"/></svg><input type="text" id="searchInput" placeholder="Buscar especie…" oninput="filterSpecies()"></div>
+      <div class="filter-scroll" id="filterChips"></div>
+      <div class="dex-header"><div class="dex-header-row"><span class="dex-prog-lbl">Colección</span><span class="dex-prog-num" id="dexNum">0 <span>/ 0</span></span></div><div class="prog-track"><div class="prog-fill" id="dexFill" style="width:0%"></div></div></div>
+      <div class="sp-list" id="spList"></div>
+    </div>
+    <div class="screen" id="screen-feed"><div class="section-head"><em>Feed</em> social</div><div id="feedContent"></div></div>
+    <div class="screen" id="screen-ranking"><div class="section-head">Rankings <em>& Social</em></div><div class="ranking-tabs"><button class="rtab on" onclick="setRankTab('global',this)">Global</button><button class="rtab" onclick="setRankTab('amigos',this)">Amigos</button></div><div id="rankContent"></div></div>
+    <div class="screen" id="screen-profile">
+      <div class="section-head">Mi <em>perfil</em></div>
+      <div class="prof-hero"><div class="prof-photo" id="profPhoto" onclick="document.getElementById('profilePhotoInput').click()"></div><input type="file" id="profilePhotoInput" accept="image/*" style="display:none" onchange="changeProfilePhoto(this)"><div class="prof-name" id="profName"></div><div class="prof-email" id="profEmail"></div><div class="prof-level" id="profLevel"></div></div>
+      <div class="stats-4"><div class="stat4"><div class="stat4-num" id="profSeen">0</div><div class="stat4-lbl">Especies</div></div><div class="stat4"><div class="stat4-num" id="profXp">0</div><div class="stat4-lbl">XP</div></div><div class="stat4"><div class="stat4-num" id="profStreak">0</div><div class="stat4-lbl">Racha</div></div><div class="stat4"><div class="stat4-num">—</div><div class="stat4-lbl">Logros</div></div></div>
+      <div class="eyebrow">Progresión</div>
+      <div class="level-card"><div class="level-hdr"><span class="level-name" id="levelName">Observador</span><span class="level-num" id="levelNum">Nivel 1</span></div><div class="level-prog-track"><div class="level-prog-fill" id="levelFill" style="width:0%"></div></div><div class="level-xp-row"><span id="levelCur">0 XP</span><span id="levelNext">siguiente: 500 XP</span></div></div>
+      <div class="eyebrow">Por categoría</div><div class="cat-grid" id="catGrid"></div>
+      <button class="logout-btn" onclick="doLogout()">Cerrar sesión</button>
+    </div>
+  </div>
+  <nav class="nav">
+    <button class="nav-btn on" onclick="goTab('home')" id="navHome"><svg viewBox="0 0 24 24"><path d="M3 9l9-7 9 7v11a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2z"/><polyline points="9,22 9,12 15,12 15,22"/></svg>Inicio</button>
+    <button class="nav-btn" onclick="goTab('dex')" id="navDex"><svg viewBox="0 0 24 24"><rect x="3" y="3" width="7" height="7"/><rect x="14" y="3" width="7" height="7"/><rect x="14" y="14" width="7" height="7"/><rect x="3" y="14" width="7" height="7"/></svg>Colección</button>
+    <button class="nav-btn" onclick="openCamera()" id="navCam" style="color:var(--green2)"><svg viewBox="0 0 24 24" style="width:24px;height:24px"><path d="M23 19a2 2 0 0 1-2 2H3a2 2 0 0 1-2-2V8a2 2 0 0 1 2-2h4l2-3h6l2 3h4a2 2 0 0 1 2 2z"/><circle cx="12" cy="13" r="4"/></svg>Cámara</button>
+    <button class="nav-btn" onclick="goTab('feed')" id="navFeed"><svg viewBox="0 0 24 24"><path d="M17 21v-2a4 4 0 0 0-4-4H5a4 4 0 0 0-4 4v2"/><circle cx="9" cy="7" r="4"/><path d="M23 21v-2a4 4 0 0 0-3-3.87"/><path d="M16 3.13a4 4 0 0 1 0 7.75"/></svg>Social</button>
+    <button class="nav-btn" onclick="goTab('profile')" id="navProfile"><svg viewBox="0 0 24 24"><path d="M20 21v-2a4 4 0 0 0-4-4H8a4 4 0 0 0-4 4v2"/><circle cx="12" cy="7" r="4"/></svg>Perfil</button>
+  </nav>
+</div>
+
+<!-- FIREBASE + APP JS -->
+<script type="module">
+import { initializeApp } from 'https://www.gstatic.com/firebasejs/10.12.0/firebase-app.js';
+import { getAuth, createUserWithEmailAndPassword, signInWithEmailAndPassword, signOut, onAuthStateChanged, updateProfile } from 'https://www.gstatic.com/firebasejs/10.12.0/firebase-auth.js';
+import { getFirestore, doc, getDoc, setDoc, updateDoc, collection, addDoc, getDocs, query, orderBy, limit, increment } from 'https://www.gstatic.com/firebasejs/10.12.0/firebase-firestore.js';
+
+const app = initializeApp({
+  apiKey:"AIzaSyBkbvjkJVMd5Ydp4iEKw0N69OW02g6Yynw",
+  authDomain:"naturadex-3ff0c.firebaseapp.com",
+  projectId:"naturadex-3ff0c",
+  storageBucket:"naturadex-3ff0c.firebasestorage.app",
+  messagingSenderId:"679050440138",
+  appId:"1:679050440138:web:a74523ff6cda68837ab333"
+});
+const auth=getAuth(app), db=getFirestore(app);
+
+const SPECIES=[
+  {id:1,e:'🦅',name:'Águila Imperial Ibérica',sci:'Aquila adalberti',cat:'Aves',hab:'Dehesa y bosque',rar:'l',pts:500,wiki:'Aquila_adalberti',desc:'La joya de la avifauna ibérica. Endémica de la Península.',dist:'Extremadura, Castilla-La Mancha y Madrid.',tags:['endémica','en peligro'],season:'Todo el año',cur:['Solo quedan ~500 individuos.','Pareja monógama de por vida.']},
+  {id:2,e:'🦉',name:'Búho Real',sci:'Bubo bubo',cat:'Aves',hab:'Roquedos',rar:'u',pts:150,wiki:'Bubo_bubo',desc:'La mayor rapaz nocturna de Europa.',dist:'Toda la Península en zonas con roquedos.',tags:['nocturna','protegida'],season:'Todo el año',cur:['Captura presas de hasta 3 kg.','Sus plumas amortiguan el vuelo.']},
+  {id:3,e:'🦩',name:'Flamenco Común',sci:'Phoenicopterus roseus',cat:'Aves',hab:'Lagunas salobres',rar:'u',pts:180,wiki:'Phoenicopterus_roseus',desc:'Icono de los humedales mediterráneos.',dist:'Doñana, Fuente de Piedra, Delta del Ebro.',tags:['migratoria','colonial'],season:'Primavera-verano',cur:['Viven más de 40 años.','El rosa viene de los carotenoides de su dieta.']},
+  {id:4,e:'🦆',name:'Ánade Real',sci:'Anas platyrhynchos',cat:'Aves',hab:'Ríos y humedales',rar:'c',pts:40,wiki:'Anas_platyrhynchos',desc:'El pato más común de Europa.',dist:'Toda la Península.',tags:['acuática','común'],season:'Todo el año',cur:['El plumaje verde solo aparece fuera de la cría.']},
+  {id:5,e:'🦅',name:'Milano Real',sci:'Milvus milvus',cat:'Aves',hab:'Dehesa y campos',rar:'u',pts:190,wiki:'Milvus_milvus',desc:'Cola en horquilla inconfundible. España tiene el 40% mundial.',dist:'Toda la Península, especialmente Extremadura.',tags:['protegida'],season:'Todo el año',cur:['Su cola en horquilla le da precisión extrema en vuelo.']},
+  {id:6,e:'🦜',name:'Cotorra Argentina',sci:'Myiopsitta monachus',cat:'Aves',hab:'Parques urbanos',rar:'c',pts:40,wiki:'Myiopsitta_monachus',desc:'Invasora de Sudamérica en todas las ciudades españolas.',dist:'Madrid, Barcelona, Sevilla, Valencia.',tags:['invasora','urbana'],season:'Todo el año',cur:['Nidos comunales de hasta 2 metros.']},
+  {id:7,e:'🦅',name:'Quebrantahuesos',sci:'Gypaetus barbatus',cat:'Aves',hab:'Alta montaña',rar:'r',pts:320,wiki:'Gypaetus_barbatus',desc:'Buitre rarísimo que come casi exclusivamente huesos.',dist:'Pirineos. Reintroducido en Picos de Europa.',tags:['protegida','montaña'],season:'Todo el año',cur:['Tiñe el plumaje con óxido de hierro.','Suelta huesos desde altura para romperlos.']},
+  {id:8,e:'🐦',name:'Cigüeña Blanca',sci:'Ciconia ciconia',cat:'Aves',hab:'Campos y pueblos',rar:'c',pts:50,wiki:'Ciconia_ciconia',desc:'La cigüeña más emblemática de Europa.',dist:'Toda la Península.',tags:['migratoria'],season:'Febrero-agosto',cur:['Migra al África subsahariana cada otoño.','Usa el mismo nido durante décadas.']},
+  {id:9,e:'🦅',name:'Buitre Leonado',sci:'Gyps fulvus',cat:'Aves',hab:'Roquedos y montaña',rar:'u',pts:160,wiki:'Gyps_fulvus',desc:'El buitre más abundante de Europa.',dist:'Toda la Península en zonas rocosas.',tags:['carroñero'],season:'Todo el año',cur:['Planea horas sin batir las alas.']},
+  {id:10,e:'🦅',name:'Halcón Peregrino',sci:'Falco peregrinus',cat:'Aves',hab:'Roquedos y ciudades',rar:'u',pts:170,wiki:'Falco_peregrinus',desc:'El animal más rápido del mundo: más de 380 km/h en picado.',dist:'Toda la Península. Cada vez más en ciudades.',tags:['rápido','protegida'],season:'Todo el año',cur:['Anida en rascacielos y puentes en ciudades.']},
+  {id:11,e:'🦉',name:'Lechuza Común',sci:'Tyto alba',cat:'Aves',hab:'Pueblos y granjas',rar:'c',pts:45,wiki:'Tyto_alba',desc:'La lechuza de los campanarios, cara en forma de corazón.',dist:'Toda la Península.',tags:['nocturna'],season:'Todo el año',cur:['Caza en total oscuridad solo con el oído.','Más de 1.000 ratones al año.']},
+  {id:12,e:'🐦',name:'Martín Pescador',sci:'Alcedo atthis',cat:'Aves',hab:'Ríos y arroyos',rar:'u',pts:130,wiki:'Alcedo_atthis',desc:'Una de las aves más coloridas de Europa.',dist:'Ríos limpios de toda la Península.',tags:['acuática','colorida'],season:'Todo el año',cur:['Se lanza en picado a más de 40 km/h.']},
+  {id:13,e:'🐦',name:'Abubilla',sci:'Upupa epops',cat:'Aves',hab:'Campos y olivares',rar:'c',pts:55,wiki:'Upupa_epops',desc:'Cresta eréctil inconfundible. Símbolo de Andalucía.',dist:'Toda la Península en primavera.',tags:['migratoria'],season:'Marzo-septiembre',cur:['"Hup-hup-hup" reproduce su canto.']},
+  {id:14,e:'🐦',name:'Golondrina Común',sci:'Hirundo rustica',cat:'Aves',hab:'Pueblos y campos',rar:'c',pts:35,wiki:'Hirundo_rustica',desc:'Símbolo de la primavera. Migra desde el África subsahariana.',dist:'Toda la Península en primavera-verano.',tags:['migratoria'],season:'Marzo-octubre',cur:['Nido de barro y saliva.']},
+  {id:15,e:'🦅',name:'Alimoche',sci:'Neophron percnopterus',cat:'Aves',hab:'Roquedos y campos',rar:'u',pts:180,wiki:'Neophron_percnopterus',desc:'El buitre más pequeño de Europa. Usa piedras como herramienta.',dist:'Toda la Península en zonas rocosas.',tags:['protegida','migratorio'],season:'Marzo-septiembre',cur:['Uno de los pocos pájaros que usa herramientas.']},
+  {id:16,e:'🦁',name:'Lince Ibérico',sci:'Lynx pardinus',cat:'Mamíferos',hab:'Matorral mediterráneo',rar:'l',pts:600,wiki:'Lynx_pardinus',desc:'El felino más amenazado del mundo. Éxito de conservación.',dist:'Doñana, Sierra Morena, Montes de Toledo.',tags:['endémico','en peligro'],season:'Todo el año',cur:['En 2002 quedaban <100. Hoy superan los 1.000.','Solo caza conejos.']},
+  {id:17,e:'🐺',name:'Lobo Ibérico',sci:'Canis lupus signatus',cat:'Mamíferos',hab:'Bosque y monte',rar:'r',pts:300,wiki:'Canis_lupus_signatus',desc:'Subespecie endémica con manchas en la cola.',dist:'Norte peninsular: Galicia, Asturias, Castilla y León.',tags:['endémica'],season:'Todo el año',cur:['Un lobo puede recorrer 50 km en una noche.']},
+  {id:18,e:'🐻',name:'Oso Pardo Ibérico',sci:'Ursus arctos',cat:'Mamíferos',hab:'Bosque montano',rar:'l',pts:550,wiki:'Ursus_arctos',desc:'El mayor carnívoro terrestre de España.',dist:'Cordillera Cantábrica y Pirineos.',tags:['protegida','en peligro'],season:'Primavera-otoño',cur:['Hiberna entre noviembre y marzo.']},
+  {id:19,e:'🦌',name:'Ciervo Rojo',sci:'Cervus elaphus',cat:'Mamíferos',hab:'Bosque y dehesa',rar:'u',pts:140,wiki:'Cervus_elaphus',desc:'El mayor cérvido ibérico. Su berrea en otoño es espectacular.',dist:'Toda la Península.',tags:['ungulado'],season:'Octubre (berrea)',cur:['Pierde el 20% de su peso durante la berrea.']},
+  {id:20,e:'🦊',name:'Zorro Rojo',sci:'Vulpes vulpes',cat:'Mamíferos',hab:'Múltiples hábitats',rar:'c',pts:55,wiki:'Vulpes_vulpes',desc:'El más adaptable de los cánidos. De la ciudad a la montaña.',dist:'Toda la Península.',tags:['oportunista'],season:'Todo el año',cur:['Más de 28 vocalizaciones.']},
+  {id:21,e:'🐗',name:'Jabalí',sci:'Sus scrofa',cat:'Mamíferos',hab:'Bosque mediterráneo',rar:'c',pts:60,wiki:'Sus_scrofa',desc:'Antecesor del cerdo doméstico. Omnívoro e inteligente.',dist:'Toda la Península.',tags:['omnívoro','nocturno'],season:'Todo el año',cur:['Su hocico es un sofisticado órgano sensorial.']},
+  {id:22,e:'🦔',name:'Erizo Europeo',sci:'Erinaceus europaeus',cat:'Mamíferos',hab:'Jardines y campos',rar:'c',pts:50,wiki:'Erinaceus_europaeus',desc:'El erizo más conocido. Sus púas son pelos modificados.',dist:'Toda la Península.',tags:['nocturno'],season:'Marzo-noviembre',cur:['Hiberna entre noviembre y marzo.','Tiene hasta 8.000 púas.']},
+  {id:23,e:'🦦',name:'Nutria Euroasiática',sci:'Lutra lutra',cat:'Mamíferos',hab:'Ríos y humedales',rar:'u',pts:200,wiki:'Lutra_lutra',desc:'Depredador semiacuático. Indicador de la salud de los ríos.',dist:'Ríos de toda la Península.',tags:['acuática','bioindicador'],season:'Todo el año',cur:['Bucea hasta 4 minutos sin respirar.']},
+  {id:24,e:'🐈',name:'Gato Montés',sci:'Felis silvestris',cat:'Mamíferos',hab:'Bosque mediterráneo',rar:'r',pts:260,wiki:'Felis_silvestris',desc:'Felino más robusto que el doméstico. Muy esquivo.',dist:'Áreas forestales peninsulares.',tags:['felino','esquivo'],season:'Todo el año',cur:['El cruce con domésticos es su mayor amenaza genética.']},
+  {id:25,e:'🦌',name:'Corzo',sci:'Capreolus capreolus',cat:'Mamíferos',hab:'Bosque y matorral',rar:'c',pts:80,wiki:'Capreolus_capreolus',desc:'El más pequeño y ágil de los cérvidos europeos.',dist:'Toda la Península.',tags:['cérvido'],season:'Todo el año',cur:['Las crías permanecen inmóviles y sin olor para esconderse.']},
+  {id:26,e:'🐾',name:'Tejón Europeo',sci:'Meles meles',cat:'Mamíferos',hab:'Bosque y campos',rar:'c',pts:70,wiki:'Meles_meles',desc:'El mustélido más grande de Europa. Gran excavador.',dist:'Toda la Península.',tags:['nocturno'],season:'Todo el año',cur:['Sus madrigueras pueden tener más de 100 entradas.']},
+  {id:27,e:'🐇',name:'Conejo Europeo',sci:'Oryctolagus cuniculus',cat:'Mamíferos',hab:'Monte bajo y campos',rar:'c',pts:35,wiki:'Oryctolagus_cuniculus',desc:'Originario de la Península. Especie clave del ecosistema.',dist:'Toda la Península.',tags:['clave','ibérico'],season:'Todo el año',cur:['De aquí viene el nombre "España" (Hispania = tierra de conejos).']},
+  {id:28,e:'🐬',name:'Delfín Mular',sci:'Tursiops truncatus',cat:'Mamíferos',hab:'Mar abierto y costas',rar:'u',pts:220,wiki:'Tursiops_truncatus',desc:'El delfín más estudiado del mundo. Inteligente y social.',dist:'Todo el litoral español.',tags:['marina','inteligente'],season:'Todo el año',cur:['Puede vivir más de 50 años.']},
+  {id:29,e:'🐬',name:'Delfín Listado',sci:'Stenella coeruleoalba',cat:'Mamíferos',hab:'Mar abierto',rar:'c',pts:80,wiki:'Stenella_coeruleoalba',desc:'El delfín más abundante del Mediterráneo.',dist:'Mediterráneo y Atlántico.',tags:['marina','social'],season:'Todo el año',cur:['Nada a más de 50 km/h.']},
+  {id:30,e:'🐳',name:'Orca',sci:'Orcinus orca',cat:'Mamíferos',hab:'Mar abierto',rar:'r',pts:380,wiki:'Orcinus_orca',desc:'El depredador marino más poderoso. Población residente en el Estrecho.',dist:'Estrecho de Gibraltar y Atlántico norte.',tags:['marina','depredador'],season:'Julio-octubre',cur:['Cada familia tiene su propio dialecto vocal.']},
+  {id:31,e:'🦎',name:'Lagarto Ocelado',sci:'Timon lepidus',cat:'Reptiles',hab:'Matorral y piedras',rar:'u',pts:130,wiki:'Timon_lepidus',desc:'El lagarto más grande de Europa. Machos con manchas azules.',dist:'Toda la Península en zonas secas.',tags:['grande','endémico'],season:'Marzo-octubre',cur:['Puede medir 90 cm.']},
+  {id:32,e:'🐢',name:'Tortuga Mora',sci:'Testudo graeca',cat:'Reptiles',hab:'Matorral mediterráneo',rar:'r',pts:240,wiki:'Testudo_graeca',desc:'Única tortuga terrestre autóctona de España continental.',dist:'Sureste: Almería y Murcia.',tags:['protegida','en peligro'],season:'Marzo-octubre',cur:['Puede vivir más de 100 años.']},
+  {id:33,e:'🐍',name:'Culebra de Escalera',sci:'Rhinechis scalaris',cat:'Reptiles',hab:'Monte mediterráneo',rar:'u',pts:120,wiki:'Rhinechis_scalaris',desc:'La culebra más grande de Europa occidental. No venenosa.',dist:'Toda la Península excepto norte húmedo.',tags:['no venenosa'],season:'Marzo-octubre',cur:['Puede alcanzar 2 metros.']},
+  {id:34,e:'🐍',name:'Víbora Hocicuda',sci:'Vipera latastei',cat:'Reptiles',hab:'Matorral seco',rar:'r',pts:240,wiki:'Vipera_latastei',desc:'La única víbora endémica de la Península. Venenosa pero esquiva.',dist:'Toda la Península excepto extremo norte.',tags:['venenosa','endémica'],season:'Marzo-octubre',cur:['Su veneno es hemotóxico.']},
+  {id:35,e:'🦎',name:'Camaleón Común',sci:'Chamaeleo chamaeleon',cat:'Reptiles',hab:'Matorral costero',rar:'r',pts:280,wiki:'Chamaeleo_chamaeleon',desc:'El único camaleón europeo. Cambia de color según el estado de ánimo.',dist:'Huelva, Cádiz, Málaga.',tags:['protegida','camuflaje'],season:'Todo el año',cur:['Lengua a 5 metros por segundo.','Ojos independientes.']},
+  {id:36,e:'🐢',name:'Tortuga Boba',sci:'Caretta caretta',cat:'Reptiles',hab:'Mar y playas',rar:'r',pts:300,wiki:'Caretta_caretta',desc:'La tortuga marina más común del Mediterráneo.',dist:'Mediterráneo. Nidificación en Murcia y Baleares.',tags:['marina','protegida'],season:'Verano (nidificación)',cur:['Las hembras vuelven a desovar donde nacieron.']},
+  {id:37,e:'🐸',name:'Rana Común',sci:'Pelophylax perezi',cat:'Anfibios',hab:'Ríos y charcas',rar:'c',pts:40,wiki:'Pelophylax_perezi',desc:'La rana más abundante de la Península. Bioindicadora.',dist:'Toda la Península.',tags:['bioindicador'],season:'Febrero-octubre',cur:['Los machos forman coros coordinados.']},
+  {id:38,e:'🦎',name:'Salamandra Común',sci:'Salamandra salamandra',cat:'Anfibios',hab:'Bosque húmedo',rar:'u',pts:150,wiki:'Salamandra_salamandra',desc:'El anfibio más reconocible. Patrón negro y amarillo de advertencia.',dist:'Norte y centro peninsular.',tags:['tóxica','nocturna'],season:'Septiembre-abril',cur:['Vivípara: pare crías ya formadas.']},
+  {id:39,e:'🐸',name:'Tritón Jaspeado',sci:'Triturus marmoratus',cat:'Anfibios',hab:'Charcas y arroyos',rar:'u',pts:150,wiki:'Triturus_marmoratus',desc:'El tritón más espectacular. Cresta dorsal en época de cría.',dist:'Mitad occidental peninsular.',tags:['acuático','cresta'],season:'Noviembre-junio',cur:['Danza nupcial muy elaborada.']},
+  {id:40,e:'🐸',name:'Sapo Común',sci:'Bufo spinosus',cat:'Anfibios',hab:'Múltiples hábitats',rar:'c',pts:35,wiki:'Bufo_spinosus',desc:'El anfibio más robusto y terrestre de la Península.',dist:'Toda la Península.',tags:['nocturno'],season:'Febrero-octubre',cur:['Migraciones nupciales masivas en carreteras.']},
+  {id:41,e:'🐙',name:'Pulpo Común',sci:'Octopus vulgaris',cat:'Marina',hab:'Fondos rocosos',rar:'c',pts:70,wiki:'Octopus_vulgaris',desc:'El molusco más inteligente del océano.',dist:'Todo el litoral español.',tags:['inteligente','camuflaje'],season:'Todo el año',cur:['Tres corazones y sangre azul.','Imita cualquier textura en menos de 1 segundo.']},
+  {id:42,e:'🦑',name:'Calamar Gigante',sci:'Architeuthis dux',cat:'Marina',hab:'Aguas profundas',rar:'l',pts:600,wiki:'Architeuthis_dux',desc:'El invertebrado más grande del mundo. Raramente visto vivo.',dist:'Atlántico profundo y Mediterráneo occidental.',tags:['profundo','misterioso'],season:'Invierno-primavera',cur:['Hasta 13 metros.','Ojos más grandes del reino animal.']},
+  {id:43,e:'🦀',name:'Bogavante Europeo',sci:'Homarus gammarus',cat:'Marina',hab:'Fondos rocosos',rar:'u',pts:180,wiki:'Homarus_gammarus',desc:'El crustáceo más grande del Atlántico europeo.',dist:'Costas atlánticas y Mediterráneo norte.',tags:['marina'],season:'Todo el año',cur:['Hasta 70 años de vida.','Azul en vivo, rojo al cocinarse.']},
+  {id:44,e:'🐠',name:'Mero Atlántico',sci:'Epinephelus marginatus',cat:'Marina',hab:'Fondos rocosos',rar:'u',pts:200,wiki:'Epinephelus_marginatus',desc:'El rey de los fondos rocosos mediterráneos. En recuperación.',dist:'Mediterráneo y Atlántico sur.',tags:['protegida'],season:'Todo el año',cur:['Todos nacen hembra; los más grandes se vuelven machos.']},
+  {id:45,e:'🦈',name:'Tiburón Tintorera',sci:'Prionace glauca',cat:'Marina',hab:'Mar abierto',rar:'r',pts:340,wiki:'Prionace_glauca',desc:'El tiburón más abundante del mundo. Azul metálico.',dist:'Atlántico y Mediterráneo.',tags:['marina'],season:'Verano-otoño',cur:['Migra miles de kilómetros sin parar.']},
+  {id:46,e:'🐟',name:'Atún Rojo',sci:'Thunnus thynnus',cat:'Marina',hab:'Mar abierto',rar:'r',pts:360,wiki:'Thunnus_thynnus',desc:'El pez más grande del Mediterráneo. Paso legendario por el Estrecho.',dist:'Atlántico y Mediterráneo.',tags:['marina','migratoria'],season:'Mayo-julio',cur:['Hasta 700 kg.','Sangre caliente como los mamíferos.']},
+  {id:47,e:'🐡',name:'Pez Globo',sci:'Lagocephalus sceleratus',cat:'Marina',hab:'Fondos costeros',rar:'r',pts:260,wiki:'Lagocephalus_sceleratus',desc:'Invasora por el Canal de Suez. Altamente tóxica.',dist:'Mediterráneo oriental, llegando al occidental.',tags:['invasora','tóxico'],season:'Verano-otoño',cur:['Toxina 1.200 veces más potente que el cianuro.']},
+  {id:48,e:'🦋',name:'Mariposa Monarca',sci:'Danaus plexippus',cat:'Insectos',hab:'Prados y jardines',rar:'u',pts:160,wiki:'Danaus_plexippus',desc:'Famosa por su migración de 4.000 km. Visitante ocasional.',dist:'Canarias y costa atlántica en migración.',tags:['migratoria'],season:'Octubre-noviembre',cur:['Usa campos magnéticos para orientarse.']},
+  {id:49,e:'🦋',name:'Macaón',sci:'Papilio machaon',cat:'Insectos',hab:'Prados y campos',rar:'u',pts:130,wiki:'Papilio_machaon',desc:'Una de las mariposas más grandes y vistosas de Europa.',dist:'Toda la Península.',tags:['vistosa'],season:'Marzo-octubre',cur:['Orugas en plantas apiáceas.']},
+  {id:50,e:'🦋',name:'Apolo Ibérico',sci:'Parnassius apollo',cat:'Insectos',hab:'Alta montaña',rar:'r',pts:300,wiki:'Parnassius_apollo',desc:'De las mariposas más espectaculares de Europa.',dist:'Pirineos, Sistema Ibérico, Sierra Nevada.',tags:['protegida','montaña'],season:'Junio-agosto',cur:['Manchas únicas como huellas dactilares.']},
+  {id:51,e:'🪲',name:'Ciervo Volante',sci:'Lucanus cervus',cat:'Insectos',hab:'Bosques de roble',rar:'u',pts:160,wiki:'Lucanus_cervus',desc:'El insecto más grande de Europa. Mandíbulas en forma de cuernos.',dist:'Bosques de roble y encina peninsulares.',tags:['protegida','nocturno'],season:'Mayo-agosto',cur:['Larvas 6 años bajo la corteza.']},
+  {id:52,e:'🐝',name:'Abeja de la Miel',sci:'Apis mellifera',cat:'Insectos',hab:'Flores silvestres',rar:'c',pts:35,wiki:'Apis_mellifera',desc:'El polinizador más importante de Europa.',dist:'Toda la Península.',tags:['polinizador'],season:'Primavera-verano',cur:['Una colmena: hasta 80.000 abejas.']},
+  {id:53,e:'🦗',name:'Cigarra Común',sci:'Lyristes plebejus',cat:'Insectos',hab:'Bosque mediterráneo',rar:'c',pts:35,wiki:'Lyristes_plebejus',desc:'Símbolo del verano mediterráneo. Solo cantan los machos.',dist:'Toda la cuenca mediterránea.',tags:['estival'],season:'Junio-septiembre',cur:['Hasta 120 dB.','17 años de larva bajo tierra.']},
+  {id:54,e:'🪲',name:'Escarabajo Pelotero',sci:'Scarabaeus sacer',cat:'Insectos',hab:'Campos y pastizales',rar:'u',pts:130,wiki:'Scarabaeus_sacer',desc:'El escarabajo sagrado de los egipcios. Recicla estiércol.',dist:'Sur de la Península.',tags:['reciclador'],season:'Primavera-otoño',cur:['Se orienta por la Vía Láctea.']},
+  {id:55,e:'🦟',name:'Libélula Emperatriz',sci:'Anax imperator',cat:'Insectos',hab:'Charcas y ríos',rar:'u',pts:120,wiki:'Anax_imperator',desc:'La libélula más grande de Europa. 95% de precisión cazando.',dist:'Toda la Península cerca de agua.',tags:['depredadora'],season:'Mayo-agosto',cur:['Puede volar marcha atrás y quedarse inmóvil.']},
+  {id:56,e:'🪲',name:'Luciérnaga',sci:'Lampyris noctiluca',cat:'Insectos',hab:'Prados húmedos',rar:'u',pts:140,wiki:'Lampyris_noctiluca',desc:'El insecto luminiscente más famoso de Europa.',dist:'Prados húmedos del norte peninsular.',tags:['luminiscente','nocturna'],season:'Junio-agosto',cur:['Solo brillan las hembras.','Luz sin calor.']},
+  {id:57,e:'🦋',name:'Isabelina',sci:'Actias isabellae',cat:'Insectos',hab:'Pinares pirenaicos',rar:'l',pts:520,wiki:'Actias_isabellae',desc:'La polilla más grande y espectacular de Europa. Endémica de los Pirineos.',dist:'Exclusiva de los Pirineos españoles.',tags:['endémica','rarísima'],season:'Julio-agosto',cur:['Más de 10 cm de envergadura.','Vuela solo unas pocas noches al año.']},
+  {id:58,e:'🪲',name:'Mantis Religiosa',sci:'Mantis religiosa',cat:'Insectos',hab:'Matorral mediterráneo',rar:'c',pts:55,wiki:'Mantis_religiosa',desc:'El depredador insecto más emblemático. Maestro del camuflaje.',dist:'Toda la Península.',tags:['depredador','camuflaje'],season:'Julio-octubre',cur:['La hembra puede comerse al macho.','Gira la cabeza 180 grados.']},
+];
+
+const RARITY={c:{label:'Común'},u:{label:'Poco común'},r:{label:'Rara'},l:{label:'Legendaria'}};
+const CATS=['Todas','Aves','Mamíferos','Reptiles','Anfibios','Marina','Insectos'];
+const CAT_ICONS={Aves:'🦅',Mamíferos:'🐺',Reptiles:'🦎',Anfibios:'🐸',Marina:'🐠',Insectos:'🦋'};
+
+let currentUser=null,userProfile=null,seen=[],xp=0,streak=1;
+let filterCat='Todas',currentSpId=null,camSpId=null;
+let camStream=null,camFacing='environment',capturedBlob=null,regPhotoB64=null;
+const wikiCache={};
+
+async function getWikiImg(title){
+  if(!title)return null;
+  if(wikiCache[title]!==undefined)return wikiCache[title];
+  wikiCache[title]=null;
+  try{
+    const r=await fetch(`https://en.wikipedia.org/api/rest_v1/page/summary/${encodeURIComponent(title)}`);
+    if(!r.ok)return null;
+    const d=await r.json();
+    wikiCache[title]=d.thumbnail?.source||null;
+    return wikiCache[title];
+  }catch{return null;}
+}
+
+onAuthStateChanged(auth,async user=>{
+  if(user){currentUser=user;await loadProfile(user);hideAuth();initApp();}
+  else{currentUser=null;showAuthScreen();}
+});
+
+async function loadProfile(user){
+  const ref=doc(db,'profiles',user.uid);
+  const snap=await getDoc(ref);
+  if(snap.exists()){
+    userProfile=snap.data();seen=userProfile.seen||[];xp=userProfile.xp||0;streak=userProfile.streak||1;
+  }else{
+    const name=user.displayName||user.email.split('@')[0];
+    userProfile={uid:user.uid,email:user.email,name,photo:user.photoURL||null,seen:[],xp:0,streak:1};
+    await setDoc(ref,userProfile);
+  }
+}
+async function saveProfile(){if(currentUser)await updateDoc(doc(db,'profiles',currentUser.uid),{seen,xp,streak});}
+
+function showAuthScreen(){document.getElementById('authScreen').classList.remove('hidden');document.getElementById('appMain').style.display='none';}
+function hideAuth(){document.getElementById('authScreen').classList.add('hidden');document.getElementById('appMain').style.display='flex';}
+
+window.showRegister=()=>{document.getElementById('authLogin').style.display='none';document.getElementById('authRegister').style.display='block';};
+window.showLogin=()=>{document.getElementById('authRegister').style.display='none';document.getElementById('authLogin').style.display='block';};
+
+window.previewRegPhoto=input=>{
+  const file=input.files[0];if(!file)return;
+  const r=new FileReader();
+  r.onload=e=>{regPhotoB64=e.target.result;document.getElementById('regPhotoCircle').innerHTML=`<img src="${regPhotoB64}" style="width:100%;height:100%;object-fit:cover;border-radius:50%">`;};
+  r.readAsDataURL(file);
+};
+
+window.doLogin=async()=>{
+  const email=document.getElementById('loginEmail').value.trim();
+  const pass=document.getElementById('loginPass').value;
+  const err=document.getElementById('loginError');
+  const btn=document.getElementById('loginBtn');
+  if(!email||!pass){err.textContent='Rellena todos los campos.';return;}
+  btn.textContent='Entrando…';btn.disabled=true;err.textContent='';
+  try{await signInWithEmailAndPassword(auth,email,pass);}
+  catch(e){err.textContent=e.code==='auth/invalid-credential'?'Email o contraseña incorrectos.':e.message;btn.textContent='Entrar';btn.disabled=false;}
+};
+
+window.doRegister=async()=>{
+  const name=document.getElementById('regName').value.trim();
+  const email=document.getElementById('regEmail').value.trim();
+  const pass=document.getElementById('regPass').value;
+  const err=document.getElementById('regError');
+  const btn=document.getElementById('regBtn');
+  if(!name||!email||!pass){err.textContent='Rellena todos los campos.';return;}
+  if(pass.length<6){err.textContent='Mínimo 6 caracteres.';return;}
+  btn.textContent='Creando…';btn.disabled=true;err.textContent='';
+  try{
+    const cred=await createUserWithEmailAndPassword(auth,email,pass);
+    await updateProfile(cred.user,{displayName:name,photoURL:regPhotoB64||null});
+  }catch(e){err.textContent=e.code==='auth/email-already-in-use'?'Este email ya tiene cuenta.':e.message;btn.textContent='Crear cuenta';btn.disabled=false;}
+};
+
+window.doLogout=async()=>{await signOut(auth);};
+
+function initApp(){
+  updateHeader();renderHome();renderFilterChips();renderSpeciesList();goTab('home');
+}
+
+function updateHeader(){
+  if(!userProfile)return;
+  const av=document.getElementById('hdrAvatar');
+  av.innerHTML=userProfile.photo?`<img src="${userProfile.photo}">`:'👤';
+  document.getElementById('hdrXp').textContent=xp+' XP';
+  const lv=getLevel();
+  document.getElementById('hdrSub').textContent=(userProfile.name||'Explorador')+' · '+lv.title;
+}
+
+function getLevel(){
+  if(xp<200)return{num:1,title:'Observador',next:200,prev:0};
+  if(xp<600)return{num:2,title:'Observador',next:600,prev:200};
+  if(xp<1200)return{num:3,title:'Explorador',next:1200,prev:600};
+  if(xp<2500)return{num:4,title:'Explorador',next:2500,prev:1200};
+  if(xp<5000)return{num:5,title:'Naturalista',next:5000,prev:2500};
+  if(xp<10000)return{num:6,title:'Naturalista',next:10000,prev:5000};
+  return{num:7,title:'Experto',next:99999,prev:10000};
+}
+
+const TABS=['home','dex','feed','ranking','profile'];
+window.goTab=tab=>{
+  TABS.forEach(t=>{
+    document.getElementById('screen-'+t).classList.toggle('on',t===tab);
+    const b=document.getElementById('nav'+t.charAt(0).toUpperCase()+t.slice(1));
+    if(b)b.classList.toggle('on',t===tab);
+  });
+  document.getElementById('mainContent').scrollTop=0;
+  if(tab==='feed')renderFeed();
+  if(tab==='ranking')renderRanking();
+  if(tab==='profile')renderProfile();
+};
+
+async function renderHome(){
+  const aod=SPECIES[Math.floor(Date.now()/86400000)%SPECIES.length];
+  document.getElementById('aodName').textContent=aod.name;
+  document.getElementById('aodSci').textContent=aod.sci;
+  document.getElementById('aodRarity').innerHTML=rarityBars(aod.rar);
+  document.getElementById('aodFact').textContent=aod.cur[0];
+  document.getElementById('aodCard').onclick=()=>openSpecies(aod.id);
+  document.getElementById('homeSeen').textContent=seen.length;
+  document.getElementById('homeXp').textContent=xp;
+  document.getElementById('streakNum').textContent=streak;
+  const wrap=document.getElementById('aodImgWrap');
+  const url=await getWikiImg(aod.wiki);
+  if(url)wrap.outerHTML=`<img class="aod-img" src="${url}" alt="${aod.name}" id="aodImgWrap">`;
+  renderNearby();
+}
+
+async function renderNearby(){
+  const unseen=SPECIES.filter(s=>!seen.includes(s.id));
+  const pool=unseen.length>3?unseen:SPECIES;
+  const sample=[...pool].sort(()=>Math.random()-.5).slice(0,6);
+  document.getElementById('nearbyGrid').innerHTML=sample.map(s=>`
+    <div class="nearby-card" onclick="openSpecies(${s.id})">
+      ${!seen.includes(s.id)?'<div class="nc-new">Nueva</div>':''}
+      <div class="nc-img-ph" id="ncph-${s.id}">${s.e}</div>
+      <div class="nc-body"><div class="nc-name">${s.name}</div><div class="nc-sci">${s.sci}</div><div class="rarity" style="margin-top:3px">${rarityBars(s.rar)}</div></div>
+    </div>`).join('');
+  for(const s of sample){
+    const url=await getWikiImg(s.wiki);if(!url)continue;
+    const el=document.getElementById('ncph-'+s.id);
+    if(el)el.outerHTML=`<img class="nc-img" src="${url}" id="ncph-${s.id}">`;
+  }
+}
+
+function renderFilterChips(){
+  document.getElementById('filterChips').innerHTML=CATS.map(c=>`<div class="filter-chip${c===filterCat?' on':''}" onclick="setCat('${c}')">${c}</div>`).join('');
+}
+window.setCat=c=>{filterCat=c;renderFilterChips();filterSpecies();};
+window.filterSpecies=()=>{
+  const q=(document.getElementById('searchInput').value||'').toLowerCase();
+  const list=SPECIES.filter(s=>(filterCat==='Todas'||s.cat===filterCat)&&(!q||s.name.toLowerCase().includes(q)||s.sci.toLowerCase().includes(q)));
+  renderSpeciesList(list);
+};
+
+async function renderSpeciesList(list){
+  if(!list)list=SPECIES;
+  const n=list.filter(s=>seen.includes(s.id)).length;
+  document.getElementById('dexNum').innerHTML=n+' <span>/ '+list.length+'</span>';
+  document.getElementById('dexFill').style.width=(list.length?(n/list.length)*100:0)+'%';
+  document.getElementById('spList').innerHTML=list.map(s=>{
+    const ok=seen.includes(s.id);
+    return `<div class="sp-row${ok?'':' locked'}" onclick="openSpecies(${s.id})">
+      <div class="sp-img"><div class="sp-img-ph" id="spph-${s.id}">${s.e}</div>${ok?'<div class="sp-check">✓</div>':''}</div>
+      <div class="sp-body"><div class="sp-name">${s.name}</div><div class="sp-sci">${s.sci}</div><div class="rarity">${rarityBars(s.rar)}</div><div class="sp-tags"><span class="tag">${s.cat}</span>${s.tags.slice(0,1).map(t=>`<span class="tag">${t}</span>`).join('')}</div></div>
+      <div class="sp-xp"><div class="sp-xp-num">${s.pts}</div><div class="sp-xp-lbl">XP</div></div>
+    </div>`;
+  }).join('');
+  for(const s of list.filter(s=>seen.includes(s.id))){
+    const url=await getWikiImg(s.wiki);if(!url)continue;
+    const el=document.getElementById('spph-'+s.id);
+    if(el)el.innerHTML=`<img src="${url}" style="width:100%;height:100%;object-fit:cover;">`;
+  }
+}
+
+window.openSpecies=async id=>{
+  currentSpId=id;
+  const s=SPECIES.find(x=>x.id===id);if(!s)return;
+  const ok=seen.includes(id);
+  document.getElementById('mdImgWrap').innerHTML=`<div class="modal-img-ph">${s.e}</div>`;
+  document.getElementById('mdName').textContent=s.name;
+  document.getElementById('mdSci').textContent=s.sci;
+  document.getElementById('mdRarity').innerHTML=rarityBars(s.rar);
+  document.getElementById('mdCat').textContent=s.cat;
+  document.getElementById('mdHab').textContent=s.hab;
+  document.getElementById('mdRar').textContent=RARITY[s.rar].label;
+  document.getElementById('mdXp').textContent='+'+s.pts+' XP';
+  document.getElementById('mdDesc').textContent=s.desc;
+  document.getElementById('mdDist').textContent=s.dist;
+  document.getElementById('mdSeason').textContent=s.season;
+  document.getElementById('mdTags').innerHTML=s.tags.map(t=>`<span class="tag${t.includes('peligro')||t.includes('tóxi')||t.includes('venenosa')?' danger':''}">${t}</span>`).join('');
+  document.getElementById('mdCur').innerHTML=s.cur.map(c=>`<div class="cur-item">${c}</div>`).join('');
+  const btn=document.getElementById('mdSeenBtn');
+  if(ok){btn.textContent='✓ Registrada — quitar';btn.style.cssText='background:var(--card2);color:var(--green2);border:1px solid var(--green2);';}
+  else{btn.textContent='Registrar avistamiento';btn.style.cssText='background:var(--green2);color:var(--bg);border:none;';}
+  document.getElementById('speciesModal').classList.add('open');
+  document.getElementById('speciesModal').scrollTop=0;
+  const url=await getWikiImg(s.wiki);
+  if(url)document.getElementById('mdImgWrap').innerHTML=`<img class="modal-img" src="${url}" alt="${s.name}">`;
+};
+window.closeModal=()=>{document.getElementById('speciesModal').classList.remove('open');currentSpId=null;};
+
+window.toggleSeen=async()=>{
+  const id=currentSpId;if(!id)return;
+  const s=SPECIES.find(x=>x.id===id);
+  if(seen.includes(id)){
+    seen=seen.filter(x=>x!==id);xp=Math.max(0,xp-s.pts);showToast(s.name+' eliminada');
+  }else{
+    seen.push(id);xp+=s.pts;
+    if(currentUser){
+      await addDoc(collection(db,'sightings'),{userId:currentUser.uid,speciesId:id,speciesName:s.name,speciesSci:s.sci,userName:userProfile?.name||'Explorador',userPhoto:userProfile?.photo||null,xp:s.pts,date:new Date().toISOString(),likes:0,emoji:s.e});
+    }
+    celebrate(s.name);
+  }
+  await saveProfile();updateHeader();openSpecies(id);renderSpeciesList();renderProfile();
+  document.getElementById('homeSeen').textContent=seen.length;
+  document.getElementById('homeXp').textContent=xp;
+};
+
+window.shareSpecies=async()=>{
+  const s=SPECIES.find(x=>x.id===currentSpId);if(!s)return;
+  if(navigator.share)await navigator.share({title:'NaturaDex — '+s.name,text:`He registrado ${s.name} en NaturaDex 🌿`,url:window.location.href});
+  else showToast('Copia la URL para compartir');
+};
+
+window.openCamera=async()=>{
+  document.getElementById('camScreen').classList.add('open');
+  document.getElementById('camBottom').style.display='none';
+  document.getElementById('camControls').style.display='block';
+  document.getElementById('camAnalyzing').classList.remove('show');
+  document.getElementById('camNoAccess').style.display='none';
+  await startCam();
+};
+async function startCam(){
+  if(camStream){camStream.getTracks().forEach(t=>t.stop());camStream=null;}
+  try{
+    camStream=await navigator.mediaDevices.getUserMedia({video:{facingMode:camFacing},audio:false});
+    const vid=document.getElementById('camVideo');vid.srcObject=camStream;await vid.play();
+  }catch{document.getElementById('camNoAccess').style.display='flex';}
+}
+window.flipCamera=async()=>{camFacing=camFacing==='environment'?'user':'environment';await startCam();};
+window.closeCamera=()=>{
+  document.getElementById('camScreen').classList.remove('open');
+  if(camStream){camStream.getTracks().forEach(t=>t.stop());camStream=null;}
+  camSpId=null;capturedBlob=null;
+  document.getElementById('camBottom').style.display='none';
+  document.getElementById('camControls').style.display='block';
+};
+window.resetCamera=()=>{
+  document.getElementById('camBottom').style.display='none';
+  document.getElementById('camControls').style.display='block';
+  document.getElementById('camAnalyzing').classList.remove('show');
+  camSpId=null;capturedBlob=null;
+};
+window.captureAndIdentify=async()=>{
+  const vid=document.getElementById('camVideo');
+  if(!vid.srcObject){document.getElementById('galleryInput').click();return;}
+  const canvas=document.getElementById('camCanvas');
+  canvas.width=vid.videoWidth||640;canvas.height=vid.videoHeight||480;
+  canvas.getContext('2d').drawImage(vid,0,0);
+  canvas.toBlob(async blob=>{if(blob){capturedBlob=blob;await identifyBlob(blob);}},'image/jpeg',0.85);
+};
+window.identifyFromGallery=async input=>{
+  const file=input.files[0];if(!file)return;
+  capturedBlob=file;await identifyBlob(file);
+};
+async function identifyBlob(blob){
+  document.getElementById('camControls').style.display='none';
+  document.getElementById('camBottom').style.display='none';
+  document.getElementById('camAnalyzing').classList.add('show');
+  document.getElementById('camTip').textContent='Claude está analizando…';
+
+  try{
+    // Convert blob to base64
+    const base64 = await new Promise((res,rej)=>{
+      const reader=new FileReader();
+      reader.onload=e=>res(e.target.result.split(',')[1]);
+      reader.onerror=rej;
+      reader.readAsDataURL(blob);
+    });
+    const mediaType = blob.type||'image/jpeg';
+
+    // Call via Netlify Function (clave segura en servidor)
+    const resp = await fetch('/.netlify/functions/identify', {
+      method: 'POST',
+      headers: {'Content-Type': 'application/json'},
+      body: JSON.stringify({image: base64, mediaType})
+    });
+
+    if(!resp.ok) throw new Error('Error '+resp.status);
+    const result = await resp.json();
+
+    document.getElementById('camAnalyzing').classList.remove('show');
+
+    if(!result.found){
+      camSpId=null;
+      document.getElementById('camName').textContent='No identificado';
+      document.getElementById('camSci').textContent=result.reason||'Intenta con mejor luz o más cerca';
+      document.getElementById('camConf').textContent='—';
+      document.getElementById('camAlts').innerHTML='';
+    } else {
+      // Try to match with our species DB
+      const sciLower=(result.scientificName||'').toLowerCase();
+      const nameLower=(result.commonName||'').toLowerCase();
+      const matched=SPECIES.find(s=>
+        s.sci.toLowerCase()===sciLower||
+        sciLower.includes(s.sci.toLowerCase().split(' ')[0])||
+        s.sci.toLowerCase().split(' ')[0]===sciLower.split(' ')[0]||
+        s.name.toLowerCase()===nameLower
+      );
+
+      if(matched){
+        camSpId=matched.id;
+        document.getElementById('camName').textContent=matched.name;
+        document.getElementById('camSci').textContent=matched.sci;
+      } else {
+        camSpId=null;
+        document.getElementById('camName').textContent=result.commonName||result.scientificName;
+        document.getElementById('camSci').textContent=result.scientificName||'';
+      }
+
+      document.getElementById('camConf').textContent=(result.confidence||'?')+'%';
+      document.getElementById('camAlts').innerHTML=(result.alternatives||[]).slice(0,2).map(a=>
+        `<div class="cam-alt"><div class="cam-alt-name">${a.name}</div><div class="cam-alt-pct">${a.confidence}%</div></div>`
+      ).join('');
+
+      // Show fun fact if available
+      if(result.funFact && !matched){
+        document.getElementById('camSci').textContent=result.funFact;
+      }
+    }
+
+    const rb=document.getElementById('camRegBtn');
+    rb.textContent=camSpId?'Registrar en colección':'No está en tu colección aún';
+    rb.disabled=!camSpId;
+    rb.style.opacity=camSpId?'1':'.5';
+    document.getElementById('camControls').style.display='none';
+    document.getElementById('camBottom').style.display='block';
+    document.getElementById('camTip').textContent='Identificado por Claude IA';
+
+  }catch(err){
+    document.getElementById('camAnalyzing').classList.remove('show');
+    document.getElementById('camControls').style.display='block';
+    document.getElementById('camTip').textContent='Error — intenta de nuevo';
+    showToast('Error al identificar. Comprueba la conexión.');
+    console.error(err);
+  }
+}
+window.registerFromCam=async()=>{if(!camSpId)return;currentSpId=camSpId;closeCamera();await window.toggleSeen();};
+
+async function renderFeed(){
+  const el=document.getElementById('feedContent');
+  el.innerHTML='<div class="loading-center"><div class="spinner"></div><span>Cargando…</span></div>';
+  try{
+    const q2=query(collection(db,'sightings'),orderBy('date','desc'),limit(30));
+    const snap=await getDocs(q2);
+    if(snap.empty){el.innerHTML='<div class="empty-state"><div class="empty-icon">🌿</div>Aún no hay avistamientos.<br>¡Sé el primero!</div>';return;}
+    el.innerHTML=snap.docs.map(d=>renderFeedItem(d.id,d.data())).join('');
+  }catch{
+    el.innerHTML='<div class="empty-state"><div class="empty-icon">⚠️</div>Activa Firestore en Firebase Console<br>Bases de datos → Firestore → Crear base de datos</div>';
+  }
+}
+function renderFeedItem(docId,s){
+  const sp=SPECIES.find(x=>x.id===s.speciesId);
+  const ago=timeAgo(s.date);
+  const avH=s.userPhoto?`<img src="${s.userPhoto}">`:(s.userName||'?')[0].toUpperCase();
+  return `<div class="feed-item">
+    <div class="feed-header"><div class="feed-avatar">${avH}</div><div><div class="feed-user">${s.userName||'Explorador'}</div><div class="feed-meta">${ago}</div></div></div>
+    <div class="feed-img-ph" onclick="openSpecies(${s.speciesId||0})" style="cursor:pointer">${s.emoji||'🌿'}</div>
+    <div class="feed-body"><div class="feed-sp-name">${s.speciesName}</div><div class="feed-sp-sci">${s.speciesSci||''}</div>${sp?`<div class="rarity">${rarityBars(sp.rar)}</div>`:''}</div>
+    <div class="feed-likes">
+      <button class="feed-like-btn" onclick="likeSighting('${docId}',this)">
+        <svg viewBox="0 0 24 24"><path d="M20.84 4.61a5.5 5.5 0 0 0-7.78 0L12 5.67l-1.06-1.06a5.5 5.5 0 0 0-7.78 7.78l1.06 1.06L12 21.23l7.78-7.78 1.06-1.06a5.5 5.5 0 0 0 0-7.78z"/></svg>${s.likes||0}
+      </button>
+      <span style="font-size:10px;color:var(--text3)">+${s.xp||0} XP</span>
+    </div>
+  </div>`;
+}
+window.likeSighting=async(id,btn)=>{
+  btn.classList.toggle('liked');
+  const liked=btn.classList.contains('liked');
+  await updateDoc(doc(db,'sightings',id),{likes:increment(liked?1:-1)});
+  const cur=parseInt(btn.textContent.replace(/\D/g,''))||0;
+  btn.innerHTML=`<svg viewBox="0 0 24 24"><path d="M20.84 4.61a5.5 5.5 0 0 0-7.78 0L12 5.67l-1.06-1.06a5.5 5.5 0 0 0-7.78 7.78l1.06 1.06L12 21.23l7.78-7.78 1.06-1.06a5.5 5.5 0 0 0 0-7.78z"/></svg>${cur+(liked?1:-1)}`;
+};
+function timeAgo(d){const s=Math.floor((Date.now()-new Date(d))/1000);if(s<60)return'Ahora';if(s<3600)return Math.floor(s/60)+'m';if(s<86400)return Math.floor(s/3600)+'h';return Math.floor(s/86400)+'d';}
+
+window.setRankTab=(tab,el)=>{document.querySelectorAll('.rtab').forEach(b=>b.classList.remove('on'));el.classList.add('on');renderRanking();};
+async function renderRanking(){
+  const el=document.getElementById('rankContent');
+  el.innerHTML='<div class="loading-center"><div class="spinner"></div></div>';
+  try{
+    const q2=query(collection(db,'profiles'),orderBy('xp','desc'),limit(20));
+    const snap=await getDocs(q2);
+    if(snap.empty){el.innerHTML='<div class="empty-state"><div class="empty-icon">🏆</div>Aún sin jugadores.</div>';return;}
+    const profiles=snap.docs.map(d=>({id:d.id,...d.data()}));
+    const myPos=profiles.findIndex(p=>p.uid===currentUser?.uid)+1;
+    const me=profiles.find(p=>p.uid===currentUser?.uid);
+    let html='';
+    if(me){
+      const avH=me.photo?`<img src="${me.photo}">`:'👤';
+      html+=`<div class="my-rank-card"><div class="my-rank-pos">${myPos||'—'}</div><div class="my-rank-av">${avH}</div><div class="my-rank-info"><div class="my-rank-name">${me.name||'Tú'}</div><div class="my-rank-sub">${(me.seen||[]).length} especies</div></div><div class="my-rank-score">${me.xp||0}</div></div>`;
+    }
+    html+=profiles.map((p,i)=>{
+      const avH=p.photo?`<img src="${p.photo}">`:(p.name||'?')[0];
+      return `<div class="rank-row"><div class="rank-pos${i<3?' top':''}">${i+1}</div><div class="rank-av">${avH}</div><div class="rank-info"><div class="rank-name">${p.name||'Explorador'}</div><div class="rank-sub">${(p.seen||[]).length} especies</div></div><div class="rank-score">${p.xp||0}</div></div>`;
+    }).join('');
+    el.innerHTML=html;
+  }catch{el.innerHTML='<div class="empty-state">Activa Firestore para ver el ranking.</div>';}
+}
+
+function renderProfile(){
+  if(!userProfile)return;
+  const ph=document.getElementById('profPhoto');
+  ph.innerHTML=userProfile.photo?`<img src="${userProfile.photo}">`:'📷';
+  document.getElementById('profName').textContent=userProfile.name||'Explorador';
+  document.getElementById('profEmail').textContent=currentUser?.email||'';
+  const lv=getLevel();
+  document.getElementById('profLevel').textContent=lv.title+' · Nivel '+lv.num;
+  document.getElementById('profSeen').textContent=seen.length;
+  document.getElementById('profXp').textContent=xp;
+  document.getElementById('profStreak').textContent=streak;
+  document.getElementById('levelName').textContent=lv.title;
+  document.getElementById('levelNum').textContent='Nivel '+lv.num;
+  const pct=Math.min(((xp-lv.prev)/(lv.next-lv.prev))*100,100);
+  document.getElementById('levelFill').style.width=pct+'%';
+  document.getElementById('levelCur').textContent=xp+' XP';
+  document.getElementById('levelNext').textContent='siguiente: '+lv.next+' XP';
+  document.getElementById('catGrid').innerHTML=CATS.filter(c=>c!=='Todas').map(cat=>{
+    const total=SPECIES.filter(s=>s.cat===cat).length;
+    const got=seen.filter(id=>SPECIES.find(s=>s.id===id&&s.cat===cat)).length;
+    return `<div class="cat-card"><div class="cat-icon">${CAT_ICONS[cat]}</div><div class="cat-info"><div class="cat-name">${cat}</div><div class="cat-prog-track"><div class="cat-prog-fill" style="width:${total?(got/total)*100:0}%"></div></div><div class="cat-count">${got}/${total}</div></div></div>`;
+  }).join('');
+}
+window.changeProfilePhoto=input=>{
+  const file=input.files[0];if(!file)return;
+  const r=new FileReader();
+  r.onload=async e=>{
+    userProfile.photo=e.target.result;
+    await updateDoc(doc(db,'profiles',currentUser.uid),{photo:userProfile.photo});
+    renderProfile();updateHeader();showToast('Foto actualizada');
+  };
+  r.readAsDataURL(file);
+};
+
+function rarityBars(rar){
+  const n={c:1,u:2,r:3,l:4}[rar]||1,cls={c:'f-c',u:'f-u',r:'f-r',l:'f-l'}[rar];
+  let h='';for(let i=1;i<=5;i++)h+=`<div class="rseg${i<=n?' '+cls:''}"></div>`;
+  return h+`<span class="rlabel">${RARITY[rar].label}</span>`;
+}
+function celebrate(name){
+  document.getElementById('celebName').textContent=name;
+  const wrap=document.getElementById('celebWrap');wrap.classList.add('show');
+  const colors=['#B8CCB0','#7FA090','#C9A96E','#7A9BB5','#F0EFE9'];
+  for(let i=0;i<40;i++){
+    const p=document.createElement('div');p.className='confetti-p';
+    const sz=4+Math.random()*6,dur=0.8+Math.random()*0.7,del=Math.random()*0.4;
+    p.style.cssText=`left:${Math.random()*100}%;top:-10px;width:${sz}px;height:${sz}px;background:${colors[i%colors.length]};border-radius:${Math.random()>.5?'50%':'2px'};animation:cffall ${dur}s ${del}s linear forwards;`;
+    wrap.appendChild(p);
+  }
+  setTimeout(()=>{wrap.classList.remove('show');wrap.querySelectorAll('.confetti-p').forEach(p=>p.remove());},2400);
+}
+window.showToast=msg=>{
+  const t=document.getElementById('toast');
+  t.textContent=msg;t.classList.add('show');
+  setTimeout(()=>t.classList.remove('show'),2400);
+};
+if('serviceWorker'in navigator)navigator.serviceWorker.register('sw.js').catch(()=>{});
+</script>
+</body>
+</html>
