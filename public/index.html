@@ -768,14 +768,18 @@ window.identifyFromGallery=async input=>{
   const file=input.files[0];if(!file)return;
   capturedBlob=file;await identifyBlob(file);
 };
+// Current camera identification result (any animal, not limited to SPECIES list)
+let camInatResult = null;
+
 async function identifyBlob(blob){
   document.getElementById('camControls').style.display='none';
   document.getElementById('camBottom').style.display='none';
   document.getElementById('camAnalyzing').classList.add('show');
-  document.getElementById('camTip').textContent='Claude está analizando…';
+  document.getElementById('camTip').textContent='Claude + iNaturalist analizando…';
+  camInatResult = null;
+  camSpId = null;
 
   try{
-    // Convert blob to base64
     const base64 = await new Promise((res,rej)=>{
       const reader=new FileReader();
       reader.onload=e=>res(e.target.result.split(',')[1]);
@@ -784,7 +788,6 @@ async function identifyBlob(blob){
     });
     const mediaType = blob.type||'image/jpeg';
 
-    // Call via Netlify Function (clave segura en servidor)
     const resp = await fetch('/.netlify/functions/identify', {
       method: 'POST',
       headers: {'Content-Type': 'application/json'},
@@ -797,50 +800,61 @@ async function identifyBlob(blob){
     document.getElementById('camAnalyzing').classList.remove('show');
 
     if(!result.found){
-      camSpId=null;
       document.getElementById('camName').textContent='No identificado';
       document.getElementById('camSci').textContent=result.reason||'Intenta con mejor luz o más cerca';
       document.getElementById('camConf').textContent='—';
       document.getElementById('camAlts').innerHTML='';
+      document.getElementById('camRegBtn').style.display='none';
     } else {
-      // Try to match with our species DB
+      // Store full iNat result for registration
+      camInatResult = result;
+
+      // Check if it matches our local SPECIES list
       const sciLower=(result.scientificName||'').toLowerCase();
-      const nameLower=(result.commonName||'').toLowerCase();
       const matched=SPECIES.find(s=>
         s.sci.toLowerCase()===sciLower||
-        sciLower.includes(s.sci.toLowerCase().split(' ')[0])||
-        s.sci.toLowerCase().split(' ')[0]===sciLower.split(' ')[0]||
-        s.name.toLowerCase()===nameLower
+        s.sci.toLowerCase().split(' ')[0]===sciLower.split(' ')[0]
       );
 
-      if(matched){
-        camSpId=matched.id;
-        document.getElementById('camName').textContent=matched.name;
-        document.getElementById('camSci').textContent=matched.sci;
-      } else {
-        camSpId=null;
-        document.getElementById('camName').textContent=result.commonName||result.scientificName;
-        document.getElementById('camSci').textContent=result.scientificName||'';
-      }
+      if(matched) camSpId = matched.id;
 
+      document.getElementById('camName').textContent=result.commonName||result.scientificName||'Animal identificado';
+      document.getElementById('camSci').textContent=result.scientificName||'';
       document.getElementById('camConf').textContent=(result.confidence||'?')+'%';
-      document.getElementById('camAlts').innerHTML=(result.alternatives||[]).slice(0,2).map(a=>
-        `<div class="cam-alt"><div class="cam-alt-name">${a.name}</div><div class="cam-alt-pct">${a.confidence}%</div></div>`
-      ).join('');
 
-      // Show fun fact if available
-      if(result.funFact && !matched){
-        document.getElementById('camSci').textContent=result.funFact;
+      // Show iNat photo if available
+      if(result.photo){
+        const existing=document.getElementById('camPreviewImg');
+        if(existing) existing.remove();
+        const img=document.createElement('img');
+        img.id='camPreviewImg';
+        img.src=result.photo;
+        img.style.cssText='width:100%;height:80px;object-fit:cover;margin-bottom:8px;';
+        document.getElementById('camBottom').insertBefore(img, document.getElementById('camBottom').firstChild);
       }
+
+      // Fun fact
+      if(result.funFact){
+        document.getElementById('camAlts').innerHTML=`<div style="font-size:10px;color:var(--text2);line-height:1.5;border-left:1px solid var(--green2);padding-left:8px">${result.funFact}</div>`;
+      } else {
+        document.getElementById('camAlts').innerHTML='';
+      }
+
+      // Conservation status badge
+      if(result.conservationStatus){
+        document.getElementById('camAlts').innerHTML+=`<div style="font-size:9px;color:var(--danger);margin-top:4px;letter-spacing:.06em;text-transform:uppercase">${result.conservationStatus}</div>`;
+      }
+
+      const rb=document.getElementById('camRegBtn');
+      rb.style.display='block';
+      rb.textContent='Registrar avistamiento';
+      rb.disabled=false;
+      rb.style.opacity='1';
     }
 
-    const rb=document.getElementById('camRegBtn');
-    rb.textContent=camSpId?'Registrar en colección':'No está en tu colección aún';
-    rb.disabled=!camSpId;
-    rb.style.opacity=camSpId?'1':'.5';
     document.getElementById('camControls').style.display='none';
     document.getElementById('camBottom').style.display='block';
-    document.getElementById('camTip').textContent='Identificado por Claude IA';
+    document.getElementById('camTip').textContent='Identificado — '+( result.inatId ? 'iNaturalist #'+result.inatId : 'Claude IA');
 
   }catch(err){
     document.getElementById('camAnalyzing').classList.remove('show');
@@ -850,7 +864,47 @@ async function identifyBlob(blob){
     console.error(err);
   }
 }
-window.registerFromCam=async()=>{if(!camSpId)return;currentSpId=camSpId;closeCamera();await window.toggleSeen();};
+
+window.registerFromCam=async()=>{
+  if(!camInatResult) return;
+  closeCamera();
+
+  // Remove preview img if any
+  const pi=document.getElementById('camPreviewImg');
+  if(pi) pi.remove();
+
+  if(camSpId){
+    // It's in our local DB — use existing flow
+    currentSpId=camSpId;
+    await window.toggleSeen();
+  } else {
+    // It's a new animal from iNaturalist — save directly to Firebase
+    if(!currentUser) return;
+    const s=camInatResult;
+    const dateStr=new Date().toLocaleDateString('es-ES',{day:'2-digit',month:'short',year:'numeric'});
+    const xpEarned = 100; // base XP for any new sighting
+    xp += xpEarned;
+    await saveProfile();
+    await addDoc(collection(db,'sightings'),{
+      userId:currentUser.uid,
+      speciesId: s.inatId||null,
+      speciesName: s.commonName||s.scientificName,
+      speciesSci: s.scientificName,
+      userName: userProfile?.name||'Explorador',
+      userPhoto: userProfile?.photo||null,
+      xp: xpEarned,
+      date: new Date().toISOString(),
+      likes: 0,
+      emoji: '🌿',
+      inatId: s.inatId||null,
+      photo: s.photo||null,
+      conservationStatus: s.conservationStatus||null,
+    });
+    updateHeader();
+    celebrate(s.commonName||s.scientificName);
+    showToast('+'+xpEarned+' XP — '+( s.commonName||s.scientificName));
+  }
+};
 
 async function renderFeed(){
   const el=document.getElementById('feedContent');
