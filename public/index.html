@@ -745,7 +745,7 @@ window.inatSearch=function(q){
   spinner.style.display='block';
   inatSearchTimer=setTimeout(async()=>{
     try{
-      const r=await fetch(`https://api.inaturalist.org/v1/taxa?q=${encodeURIComponent(q)}&rank=species,subspecies&per_page=20&locale=es&is_active=true&iconic_taxa=Animalia,Aves,Mammalia,Reptilia,Amphibia,Actinopterygii,Mollusca,Arachnida,Insecta`,{headers:{Accept:'application/json'}});
+      const r=await fetch(`/.netlify/functions/search?q=${encodeURIComponent(q)}`);
       const d=await r.json();
       spinner.style.display='none';
       if(!d.results||!d.results.length){
